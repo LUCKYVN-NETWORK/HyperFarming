@@ -1,0 +1,173 @@
+# Main settings of the plugin
+engine:
+  # What type of economy should we use? 'TokenManager' or 'Vault' ?
+  economy-mode: 'Vault'
+  # What is the base storage size for new players?
+  default-limit: 10000
+  # Should fortune affect the number of drops?
+  fortune-drops: true
+  # Growth level required for fortune / bonus drops
+  # 1.0 = 100.0%
+  # 0.5 = 50.0% - rounded to the next integers (3.5 => 4)
+  growth-bonus-requirement: 1.0
+  # Which crops should not receive bonus from fortune?
+  fortune-blacklist:
+    - WHEAT
+    - BEETROOT
+    - PUMPKIN
+    - SUGAR_CANE
+    - CACTUS
+  # Which crops should be blacklisted from being automatically replanted
+  replant-blacklist:
+    - PUMPKIN
+    - MELON
+    - SUGAR_CANE
+    - CACTUS
+  # Settings for random plugin support
+  support:
+    # Support for SuperiorSkyblock2
+    superiorskyblock:
+      # Should players only be allowed to break blocks at their island?
+      only-at-island: false
+      # Should we allow coop players to also farm on others' islands?
+      allow-coop: true
+  # Setup pricing for different types of materials
+  pricing:
+    # Type of material
+    wheat:
+      # Selling price
+      price: 1000
+      # Amount required to sell
+      amount: 64
+    carrot:
+      price: 1000
+      amount: 64
+    potato:
+      price: 1000
+      amount: 64
+    beetroot:
+      price: 1000
+      amount: 64
+    melon:
+      price: 1000
+      amount: 64
+    pumpkin:
+      price: 1000
+      amount: 64
+    sugar_cane:
+      price: 1000
+      amount: 64
+    cactus:
+      price: 1000
+      amount: 64
+    cocoa:
+      price: 1000
+      amount: 64
+# Define syntax suggestions for users to see
+commands:
+  # Message for /farm storage (or /farm)
+  storage: ''
+  # Message for /farm sell
+  sell: 'sell [loại] all/[số lượng]'
+  # Message for /farm take
+  take: 'take [loại] all/[số lượng]'
+  # Message for /farm deposit
+  deposit: 'deposit [loại] all/[số lượng]'
+  # Message for /farm send
+  send: 'send [người chơi] [loại] all/[số lượng]'
+  # Message for /farm send
+  multiplier: 'multiplier all/[chế độ] [mức nhân]'
+  # Message for /farm tool
+  tool: 'tool [tính năng]'
+# Lore configuration for special enchantments
+enchant:
+  # Lore for replant enchantment
+  replant:
+    - '&e► &fHiệu ứng: &aTự động gieo trồng'
+    - '&f &f &f &bTự động gieo trồng lại cây'
+    - '&f &f &f &fsau khi bạn &ethu hoạch'
+  multiplier:
+    - '&e► &fHiệu ứng: &ax{multiplier} {type}'
+    - '&f &f &f &6Gia tăng lượng &enông sản'
+    - '&f &f &f &fthu vào &5kho &fnông sản'
+# Layout settings for input GUIs
+sign:
+  # Input GUI layout for withdrawing from the storage
+  take:
+    - ''
+    - '-----------------'
+    - '&0Hãy nhập số &a{type}'
+    - '&0bạn muốn rút từ kho'
+  sell:
+    - ''
+    - '-----------------'
+    - '&0Hãy nhập số &a{type}'
+    - '&0bạn muốn bán đi'
+message:
+  # Bulk display for the /farm help command
+  help:
+    - '&f---------------------------------'
+    - '&fMục &btrợ giúp &f- &5HyperFarming &a{version} &f- Lệnh cơ bản'
+    - '&e/farm &f- Mở kho chứa nông sản'
+    - '&e/farm help &f- Hiển thị mục trợ giúp lệnh'
+    - '&e/farm sell &f- Bán nông sản ở trong kho'
+    - '&e/farm take &f- Rút nông sản vào túi đồ'
+    - '&e/farm deposit &f- &fChuyển nông sản vào kho'
+    - '&e/farm send &f- &fChuyển nông sản cho người khác'
+  help-admin:
+    - '&e/farm replant &f- Cho vật phẩm trên tay tự động gieo trồng'
+    - '&e/farm multiplier &f- Cho vật phẩm trên tay tăng lượng &6drop'
+  # Bulk display for what to display to console upon startup
+  startup:
+    - '&fĐang khởi động - &2HyperFarming &f- &av{version}'
+    - '&f------------------------------'
+    - '&fAuthor/Developer: &e{dev}'
+    - '&fPhiên bán máy chủ: &a{server}'
+    - ''
+    - '&e© &fCopyright by &dLuckyVN &cNetwork'
+    - '--------------------------------'
+  plants:
+    WHEAT: 'Lúa'
+    CARROT: 'Cà rốt'
+    POTATO: 'Khoai tây'
+    BEETROOT: 'Củ dền'
+    PUMPKIN: 'Bí ngô'
+    MELON: 'Dưa hấu'
+    SUGAR_CANE: 'Mía'
+    CACTUS: 'Xương rồng'
+    COCOA: 'Hạt cacao'
+    ALL: 'Tất cả'
+  hooked-vault: '&f &e> &fĐã kết nối với hệ thống tiền của &eVault &a&l✔'
+  hooked-token-manager: '&f &e> &fĐã kết nối với hệ thống tiền của &eTokenManager &a&l✔'
+  hooked-support: '&f &e> &fĐã kết nối với hệ thống của &6{plugin}&f! &a&l✔'
+  action-bar-full: '&c&l✘ &3| &fKho &enông sản &fcho &a{type} &fđã đầy! &e| &e/farm'
+  action-bar-add: '&a&l✔ &3| &fĐã nhận &a+{amount} {type} &fvào kho nông sản &e| &e/farm'
+  only-player: '&eFarm &3| &cLỗi: &fLệnh này chỉ dành cho người chơi! &c&l✘'
+  no-permissions: '&eFarm &3| &cLỗi: &fBạn không có quyền dùng lệnh này &c&l✘'
+  no-args: '&eFarm &3| &cLỗi: &fDùng lệnh sai rồi! Cú pháp là: &a{syntax}'
+  invalid-type: '&eFarm &3| &cLỗi: &fLoại nông sản không hợp lệ, kiểm tra lại &eID &fở trong kho nhé &d:3'
+  insufficient-balance: '&eFarm &3| &cLỗi: &fKho nông sản của bạn không có đủ &a{type}'
+  insufficient-supply: '&eFarm &3| &cLỗi: &fTrong túi bạn không có đủ &a{type}'
+  storage-full: '&eFarm &3| &cLỗi: &fTrong kho chứa &a{type} &fcủa bạn hết chỗ rồi &b:<'
+  player-offline: '&eFarm &3| &cLỗi: &fNgười chơi &a{player} &fhiện không trực tuyến!'
+  receiver-full: '&eFarm &3| &cLỗi: &fKho của &a{player} &fhết chỗ chứa &a{type} &frồi!'
+  invalid-int: '&eFarm &3| &cLỗi: &fSố lượng bạn nhập - &e%input% &f- không hợp lệ!'
+  invalid-mode: '&eFarm &3| &cLỗi: &fChế độ nhân không hợp lệ! Hãy bấm &8[&eTab&8] &fđể xem các chế độ nhé &e:3'
+  invalid-tool: '&eFarm &3| &cLỗi: &fKhông có tính năng nào mang tên &a{input} &fcả!'
+  melon-compression-on: '&eFarm &3| &aGhi chú: &fĐã &abật &fchế độ &btự động &fnén dưa hấu thành khối!'
+  melon-compression-off: '&eFarm &3| &aGhi chú: &fĐã &ctắt &fchế độ &btự động &fnén dưa hấu thành khối!'
+  melon-reminder-off: '&eFarm &3| &6Mẹo: &fHãy bấm &a/farm tool melon &fđể tự động nén dưa hấu thành khối nhé &d:3'
+  melon-reminder-on: '&eFarm &3| &6Mẹo: &fHãy bấm &a/farm tool melon &fđể quay về nhận dưa hấu thường nhé &d:3'
+  invalid-factor: '&eFarm &3| &cLỗi: &fMức nhân bạn nhập - &e%input% &fkhông hợp lệ!'
+  factor-min: '&eFarm &3| &cLỗi: &fMức độ nhân quá thấp, tối thiểu phải lớn hơn &a1.0&f!'
+  hand-empty: '&eFarm &3| &cLỗi: &fBạn hãy cầm vật phẩm gì trên tay đi &d:3 ?'
+  not-supported-tool: '&eFarm &3| &fDụng cụ này không thể áp dụng &aenchant &fcủa &enông sản&f. Hãy thử &aRìu &fhoặc &aCuốc&f!'
+  toggle-on: '&eFarm &3| &aGhi chú: &fĐã &8[&aBật&8] &ftính năng kho nông sản cho tài khoản của bạn!'
+  toggle-off: '&eFarm &3| &aGhi chú: &fĐã &8[&cTắt&8] &ftính năng kho nông sản cho tài khoản của bạn!'
+  sell: '&eFarm &3| &aGhi chú: &fĐã bán &ax{amount} {type} &f- Bạn nhận được &a${money}'
+  take: '&eFarm &3| &aGhi chú: &fĐã rút &ax{amount} {type} &ftừ kho nông sản vào túi!'
+  deposit: '&eFarm &3| &aGhi chú: &fĐã gửi &ax{amount} {type} &fvào kho nông sản!'
+  send: '&eFarm &3| &aGhi chú: &fBạn đã gửi &ax{amount} {type} &fcho &a{player}&f!'
+  receive: '&eFarm &3| &aGhi chú: &fBạn đã nhận &ax{amount} {type} &ftừ &a{player}&f!'
+  enchant: '&eFarm &3| &aGhi chú: &fBạn đã áp dụng phù phép &a{key} x{value}&f lên vật phẩm trên tay!'
+  reload: '&eFarm &3| &aGhi chú: &fĐã tải lại plugin thành công! &fPhiên bản: &a{version}'
