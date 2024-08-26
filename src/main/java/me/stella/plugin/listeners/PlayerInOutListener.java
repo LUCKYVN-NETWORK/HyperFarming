@@ -23,11 +23,11 @@ public class PlayerInOutListener implements Listener {
     @EventHandler(ignoreCancelled = true)
     public void onJoin(PlayerJoinEvent e) {
         final Player player = e.getPlayer();
-        BukkitUtils.use.add(player.getUniqueId());
         handshakeIn(player);
     }
 
     public static void handshakeIn(final Player player) {
+        BukkitUtils.use.add(player.getUniqueId());
         (new BukkitRunnable() {
             @Override
             public void run() {
@@ -49,10 +49,10 @@ public class PlayerInOutListener implements Listener {
     @EventHandler(priority = EventPriority.LOWEST)
     public void onQuit(PlayerQuitEvent e) {
         final Player player = e.getPlayer();
-        BukkitUtils.use.add(player.getUniqueId());
         synchronized (PlayerFarmListener.activityCache) {
             PlayerFarmListener.activityCache.remove(player);
         }
+        BukkitUtils.use.remove(player.getUniqueId());
         PlayerFarmListener.stopActionBarQueue(player);
         final PlayerWrapper playerWrapper = PlayerWrapper.buildWrapper(player);
         handshakeOut(playerWrapper);

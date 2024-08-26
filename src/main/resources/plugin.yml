@@ -1,5 +1,5 @@
 name: HyperFarming
-version: 1.0.12-b4-2024
+version: 1.0.12-b5-2024
 main: me.stella.HyperFarming
 depend:
   - ProtocolLib

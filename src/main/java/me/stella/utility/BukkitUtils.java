@@ -47,13 +47,19 @@ public class BukkitUtils {
     }
 
     public static Material returnOneOf(String... materialId) {
-        for(String id: materialId) {
-            try {
-                Material materialInst = Material.getMaterial(id);
-                if(materialInst != null)
-                    return materialInst;
-            } catch(Throwable err) {}
-        }
+        Class<?> material;
+        NMSProtocol protocol = HyperVariables.get(NMSProtocol.class);
+        try {
+            material = protocol.getNMSClass("org.bukkit.Material");
+            for(String id: materialId) {
+                try {
+                    Material materialInst = (Material) material.getMethod("getMaterial", String.class)
+                            .invoke(null, id);
+                    if(materialInst != null)
+                        return materialInst;
+                } catch(Throwable err2) {}
+            }
+        } catch(Exception err) {}
         return null;
     }
 
@@ -97,11 +103,13 @@ public class BukkitUtils {
         return null;
     }
 
-    public static int handleDropLogic(String type, int fortune, Random worldRandom) {
+    public static int handleDropLogic(String type, int fortune, boolean silk, Random worldRandom) {
         HyperSettings pluginConfig = HyperVariables.get(HyperSettings.class);
         if(!pluginConfig.shouldFortuneDrops())
             return 1;
         if(pluginConfig.getFortuneBlacklist().contains(type))
+            return 1;
+        if(silk)
             return 1;
         switch(type) {
             case "WHEAT":

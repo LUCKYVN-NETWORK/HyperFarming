@@ -79,7 +79,6 @@ public class PlayerFarmListener implements Listener {
         this.storable.put("CARROTS", CropsWrapper.build("CARROT", new ItemStack(BukkitUtils.returnOneOf("CARROT_ITEM", "CARROT"))));
         this.storable.put("BEETROOT_BLOCK", CropsWrapper.build("BEETROOT", new ItemStack(Material.BEETROOT)));
         this.storable.put("MELON_BLOCK", CropsWrapper.build("MELON", new ItemStack(BukkitUtils.returnOneOf("MELON_SLICES", "MELON"))));
-        this.storable.put("MELON", CropsWrapper.build("MELON", new ItemStack(BukkitUtils.returnOneOf("MELON_SLICES", "MELON"))));
         this.storable.put("PUMPKIN", CropsWrapper.build("PUMPKIN", new ItemStack(Material.PUMPKIN)));
         this.storable.put("COCOA", CropsWrapper.build("COCOA", MultiVerItems.buildCocoaStack()));
         this.storable.put("SUGAR_CANE_BLOCK", CropsWrapper.build("SUGAR_CANE", new ItemStack(Material.SUGAR_CANE)));
@@ -99,27 +98,30 @@ public class PlayerFarmListener implements Listener {
         this.seededTypes.put("BEETROOT", Material.BEETROOT_SEEDS);
     }
 
-    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.LOWEST)
     public void onBreak(final BlockBreakEvent event) {
         final Player player = event.getPlayer();
         final Block block = event.getBlock();
+        final World blockWorld = block.getWorld();
         final Material blockType = block.getType();
         final ItemStack breakStack = player.getInventory().getItemInMainHand();
         final FarmerData farmerData = (FarmerData) player.getMetadata("farmerData").get(0).value();
         final SupportedPlugin externalPluginProt = HyperVariables.get(SupportedPlugin.class);
+        final HyperSettings config = HyperVariables.get(HyperSettings.class);
         // random debug shit
         /*
         HyperFarming.console.log(Level.INFO, "Storable -> " + this.storable.containsKey(blockType.name()));
         HyperFarming.console.log(Level.INFO, "Tool -> " + breakStack.getType().name() + " - " + BukkitUtils.tools.contains(breakStack.getType()));
         HyperFarming.console.log(Level.INFO, "Port -> " + externalPluginProt.getClass().getSimpleName() + " - " + externalPluginProt.canBreak(player, block));
          */
-        if(this.storable.containsKey(blockType.name()) && externalPluginProt.canBreak(player, block) && BukkitUtils.use.contains(player.getUniqueId())) {
-            event.setDropItems(false);
-            final boolean tool = breakStack != null && BukkitUtils.tools.contains(breakStack.getType());
+        if(this.storable.containsKey(blockType.name()) &&
+                externalPluginProt.canBreak(player, block) &&
+                BukkitUtils.use.contains(player.getUniqueId()) &&
+                config.getEnabledWorlds().contains(blockWorld.getName())) {
+            event.setDropItems(false); event.setCancelled(true);
+            final boolean tool = BukkitUtils.tools.contains(breakStack.getType());
             final NMSProtocol serverProtocol = HyperVariables.get(NMSProtocol.class);
-            final World blockWorld = block.getWorld();
             final Random random = serverProtocol.getWorldRandom(blockWorld);
-            final HyperSettings config = HyperVariables.get(HyperSettings.class);
             CropsWrapper wrapper = this.storable.get(blockType.name());
             String actionBarId = config.getTypeName(wrapper.getDataID());
             if(farmerData.isFull(wrapper.getDataID())) {
@@ -150,14 +152,10 @@ public class PlayerFarmListener implements Listener {
                 }).runTaskLater(HyperFarming.inst(), 2L);
                 replantInvoked.set(true);
             }
-            for(Block brokenBlock: toBreak)
-                (new BukkitRunnable() {
-                    @Override
-                    public void run() {
-                        serverProtocol.breakBlock(brokenBlock);
-                    }
-                }).runTask(HyperFarming.inst());
-            if(player.getGameMode() == GameMode.SURVIVAL && breakStack != null && tool && !BukkitUtils.isUnbreakable(breakStack))
+            for(Block brokenBlock: toBreak) {
+                serverProtocol.breakBlock(brokenBlock);
+            }
+            if(player.getGameMode() == GameMode.SURVIVAL && tool && !BukkitUtils.isUnbreakable(breakStack))
                 serverProtocol.damageTool(player, breakStack);
             farmerData.breakBlock();
             // run drops calculations
@@ -171,9 +169,10 @@ public class PlayerFarmListener implements Listener {
                     int bonusRequired = BukkitUtils.getRoundedInt(maxGrowth.get(blockType.name()), config.getRequiredGrowthForBonus());
                     int baseDrop = 0;
                     int fortune = tool ? breakStack.getEnchantmentLevel(Enchantment.LOOT_BONUS_BLOCKS) : 0;
+                    boolean silk = (tool ? breakStack.getEnchantmentLevel(Enchantment.SILK_TOUCH) : 0) != 0;
                     for(int k = 0; k < toBreak.size(); k++)
                         baseDrop += (growthCurrent >= bonusRequired) ?
-                                BukkitUtils.handleDropLogic(wrapper.getDataID(), fortune, random) : 1;
+                                BukkitUtils.handleDropLogic(wrapper.getDataID(), fortune, silk, random) : 1;
                     int seedDrops;
                     if(growthCurrent >= bonusRequired)
                         seedDrops = seededTypes.containsKey(wrapper.getDataID()) ? random.nextInt(2) + 1 : 0;
@@ -204,7 +203,7 @@ public class PlayerFarmListener implements Listener {
                             baseDrop--;
                     }
                     final int finalSeedDrops = seedDrops;
-                    if(seedDrops > 0) {
+                    if(seedDrops > 0 && seededTypes.containsKey(wrapper.getDataID())) {
                         (new BukkitRunnable() {
                             @Override
                             public void run() {

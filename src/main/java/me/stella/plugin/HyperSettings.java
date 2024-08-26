@@ -25,6 +25,10 @@ public class HyperSettings {
         this.config = YamlConfiguration.loadConfiguration(this.file);
     }
 
+    public List<String> getEnabledWorlds() {
+        return this.config.getStringList("engine.enabled-worlds");
+    }
+
     public String getMessage(String key) {
         return this.config.getString("message." +  key, "");
     }

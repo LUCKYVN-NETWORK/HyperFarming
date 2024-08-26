@@ -23,6 +23,9 @@ engine:
     - MELON
     - SUGAR_CANE
     - CACTUS
+  # Which worlds should be allowed for the plugin to function?
+  enabled-worlds:
+    - SuperiorWorld
   # Settings for random plugin support
   support:
     # Support for SuperiorSkyblock2
