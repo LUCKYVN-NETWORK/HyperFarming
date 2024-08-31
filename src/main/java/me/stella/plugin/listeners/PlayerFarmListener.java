@@ -11,6 +11,7 @@ import me.stella.support.SupportedPlugin;
 import me.stella.utility.BukkitUtils;
 import org.bukkit.*;
 import org.bukkit.block.Block;
+import org.bukkit.block.data.BlockData;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -18,6 +19,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
@@ -153,6 +155,7 @@ public class PlayerFarmListener implements Listener {
                 replantInvoked.set(true);
             }
             for(Block brokenBlock: toBreak) {
+                handleFarmQuest(player, brokenBlock);
                 serverProtocol.breakBlock(brokenBlock);
             }
             if(player.getGameMode() == GameMode.SURVIVAL && tool && !BukkitUtils.isUnbreakable(breakStack))
@@ -239,6 +242,19 @@ public class PlayerFarmListener implements Listener {
                 }
             }).runTaskAsynchronously(HyperFarming.inst());
         }
+    }
+
+    private void handleFarmQuest(Player player, Block block) {
+        try {
+            if(BukkitUtils.isPluginEnabled("Quests")) {
+                Plugin pluginQuests = Bukkit.getPluginManager().getPlugin("Quests");
+                Object taskTypeManager = pluginQuests.getClass().getMethod("getTaskTypeManager").invoke(pluginQuests);
+                Object farmTask = taskTypeManager.getClass().getMethod("getTaskType", String.class)
+                        .invoke(taskTypeManager, "farming");
+                farmTask.getClass().getMethod("handle", Player.class, Block.class, BlockData.class, String.class)
+                        .invoke(farmTask, player, block, block.getBlockData(), "harvest");
+            }
+        } catch(Throwable t) { }
     }
 
 }
