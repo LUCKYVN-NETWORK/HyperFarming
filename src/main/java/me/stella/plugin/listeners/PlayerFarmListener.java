@@ -23,9 +23,11 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
+import java.lang.reflect.Method;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Level;
 
 public class PlayerFarmListener implements Listener {
     private final Map<String, CropsWrapper> storable;
@@ -100,7 +102,7 @@ public class PlayerFarmListener implements Listener {
         this.seededTypes.put("BEETROOT", Material.BEETROOT_SEEDS);
     }
 
-    @EventHandler(priority = EventPriority.LOWEST)
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void onBreak(final BlockBreakEvent event) {
         final Player player = event.getPlayer();
         final Block block = event.getBlock();
@@ -132,9 +134,9 @@ public class PlayerFarmListener implements Listener {
                 event.setCancelled(true);
                 return;
             }
+            handleFarmQuest(player, event);
             List<Block> toBreak = new ArrayList<>();
-            toBreak.add(block);
-            if(blockType.name().equals("CACTUS") || blockType.name().equals("SUGAR_CANE_BLOCK")) {
+            if(blockType.name().equals("CACTUS") || blockType.name().contains("SUGAR_CANE")) {
                 Location blockLoc = block.getLocation().clone();
                 for(int i = blockLoc.getBlockY() + 1; i < 256; i++) {
                     Block nextBlock = new Location(blockWorld, blockLoc.getBlockX(), i, blockLoc.getBlockZ()).getBlock();
@@ -143,6 +145,7 @@ public class PlayerFarmListener implements Listener {
                     else break;
                 }
             }
+            toBreak.add(block);
             final int growthCurrent = serverProtocol.getGrowth(block);
             AtomicBoolean replantInvoked = new AtomicBoolean(false);
             if(serverProtocol.hasNBTTag(breakStack, "replant") && !config.getReplantBlackList().contains(wrapper.getDataID())) {
@@ -154,10 +157,8 @@ public class PlayerFarmListener implements Listener {
                 }).runTaskLater(HyperFarming.inst(), 2L);
                 replantInvoked.set(true);
             }
-            for(Block brokenBlock: toBreak) {
-                handleFarmQuest(player, brokenBlock);
+            for(Block brokenBlock: toBreak)
                 serverProtocol.breakBlock(brokenBlock);
-            }
             if(player.getGameMode() == GameMode.SURVIVAL && tool && !BukkitUtils.isUnbreakable(breakStack))
                 serverProtocol.damageTool(player, breakStack);
             farmerData.breakBlock();
@@ -244,17 +245,18 @@ public class PlayerFarmListener implements Listener {
         }
     }
 
-    private void handleFarmQuest(Player player, Block block) {
+    private void handleFarmQuest(Player player, BlockBreakEvent event) {
         try {
             if(BukkitUtils.isPluginEnabled("Quests")) {
                 Plugin pluginQuests = Bukkit.getPluginManager().getPlugin("Quests");
                 Object taskTypeManager = pluginQuests.getClass().getMethod("getTaskTypeManager").invoke(pluginQuests);
                 Object farmTask = taskTypeManager.getClass().getMethod("getTaskType", String.class)
-                        .invoke(taskTypeManager, "farming");
-                farmTask.getClass().getMethod("handle", Player.class, Block.class, BlockData.class, String.class)
-                        .invoke(farmTask, player, block, block.getBlockData(), "harvest");
+                        .invoke(taskTypeManager, "blockbreak");
+                Method methodHandle = farmTask.getClass().getDeclaredMethod("onBlockBreak", BlockBreakEvent.class);
+                methodHandle.setAccessible(true);
+                methodHandle.invoke(farmTask, event);
             }
-        } catch(Throwable t) { }
+        } catch(Throwable t) {}
     }
 
 }
