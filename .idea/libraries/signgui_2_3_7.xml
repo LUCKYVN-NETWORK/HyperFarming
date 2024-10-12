@@ -1,9 +1,0 @@
-<component name="libraryTable">
-  <library name="signgui-2.3.7">
-    <CLASSES>
-      <root url="jar://$PROJECT_DIR$/../../../jar/signgui-2.3.6.jar!/" />
-    </CLASSES>
-    <JAVADOC />
-    <SOURCES />
-  </library>
-</component>

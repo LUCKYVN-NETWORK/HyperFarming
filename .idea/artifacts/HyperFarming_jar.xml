@@ -1,9 +1,0 @@
-<component name="ArtifactManager">
-  <artifact type="jar" name="HyperFarming:jar">
-    <output-path>$PROJECT_DIR$/out/artifacts/HyperFarming_jar</output-path>
-    <root id="archive" name="HyperFarming.jar">
-      <element id="module-output" name="HyperFarming" />
-      <element id="extracted-dir" path="$PROJECT_DIR$/../../../jar/signgui-2.3.6.jar" path-in-jar="/" />
-    </root>
-  </artifact>
-</component>
