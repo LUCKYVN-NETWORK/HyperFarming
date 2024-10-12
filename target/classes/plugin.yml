@@ -1,0 +1,59 @@
+name: HyperFarming
+version: 1.1.01-b4-2024
+main: me.stella.HyperFarming
+depend:
+  - ProtocolLib
+  - Vault
+softdepend:
+  - TokenManager
+  - SuperiorSkyblock2
+  - WorldGuard
+  - PlaceholderAPI
+authors:
+  - StellarSeal_
+description: A brand new experience to farming - Made for LuckyVN
+commands:
+  farm:
+    usage: /<command>
+    description: Main command of HyperFarming, use to access most other things
+permissions:
+  farm.*:
+    description: Global scope permissions for administrators
+    default: op
+    children:
+      farm.use: true
+      farm.command.help: true
+      farm.command.sell: true
+      farm.command.take: true
+      farm.command.deposit: true
+      farm.command.send: true
+      farm.command.replant: true
+      farm.command.multiplier: true
+      farm.command.reload: true
+  farm.use:
+    description: Permission to use the farm storage
+    default: true
+  farm.command.help:
+    description: Permission to use the help command
+    default: true
+  farm.command.sell:
+    description: Permission to use the sell command
+    default: true
+  farm.command.take:
+    description: Permission to use the withdraw/take command
+    default: true
+  farm.command.deposit:
+    description: Permission to use the deposit command
+    default: true
+  farm.command.send:
+    description: Permission to send your crops to other players
+    default: true
+  farm.command.replant:
+    description: Permission to add the replant enchantment on hand
+    default: op
+  farm.command.multiplier:
+    description: Permission to add multipliers to an item on hand
+    default: op
+  farm.command.reload:
+    description: Permission to reload the plugin's configuration files
+    default: op
