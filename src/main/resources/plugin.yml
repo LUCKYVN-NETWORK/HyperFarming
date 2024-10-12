@@ -1,6 +1,7 @@
 name: HyperFarming
 main: me.stella.HyperFarming
-version: 1.1.01-b4-2024
+version: 1.2-b01-2024
+api-version: 1.13
 depend:
   - ProtocolLib
   - Vault

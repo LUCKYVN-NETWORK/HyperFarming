@@ -5,7 +5,7 @@ import me.stella.gui.HyperGUIHandle;
 import me.stella.nms.MultiVerItems;
 import me.stella.nms.NMSProtocol;
 import me.stella.objects.PlayerWrapper;
-import me.stella.plugin.ConfigUpdater;
+import me.stella.plugin.IOWorker;
 import me.stella.plugin.HyperSettings;
 import me.stella.plugin.commands.FarmCommand;
 import me.stella.plugin.commands.FarmTabCompleter;
@@ -43,13 +43,11 @@ public final class HyperFarming extends JavaPlugin {
     @Override
     public void onEnable() {
         main = this;
-        saveDefaultConfig();
-        if(!(new File(getDataFolder(), "menu.yml").exists()))
-            saveResource("menu.yml", false);
-        ConfigUpdater.update("config.yml");
-        ConfigUpdater.update("menu.yml");
+        String craftBukkitVer = getServer().getClass().getName().split("\\.")[3];
+        MultiVerItems.LEGACY = craftBukkitVer.equals("v1_12_R1");
+        this.setupConfiguration();
         HyperSettings settings = new HyperSettings(new File(getDataFolder(), "config.yml"));
-        HyperGUIBuilder guiBuilder = new HyperGUIBuilder(new File(getDataFolder(), "menu.yml"));
+        HyperGUIBuilder guiBuilder = new HyperGUIBuilder(new File(getDataFolder(), "menu_1_12.yml"));
         File dataDirectory = new File(getDataFolder(), "data");
         if(!dataDirectory.exists())
             dataDirectory.mkdirs();
@@ -57,7 +55,6 @@ public final class HyperFarming extends JavaPlugin {
         HyperVariables.inject(HyperGUIBuilder.class, guiBuilder);
         HyperVariables.inject(HyperGUIHandle.class, new HyperGUIHandle(guiBuilder));
         String nmsPackage = "me.stella.nms.versions.";
-        String craftBukkitVer = getServer().getClass().getName().split("\\.")[3];
         String developers = getDescription().getAuthors().toString();
         String pluginVer = getDescription().getVersion();
         ClassLoader hyperFarmLoader = this.getClass().getClassLoader();
@@ -77,7 +74,6 @@ public final class HyperFarming extends JavaPlugin {
                             .replace("{dev}", developers)
                             .replace("{server}", craftBukkitVer))
                     .forEach(msg -> console.log(Level.INFO, BukkitUtils.color(msg)));
-            MultiVerItems.LEGACY = craftBukkitVer.equals("v1_12_R1");
             System.gc();
             System.runFinalization();
         } catch(Exception err) { err.printStackTrace(); }
@@ -115,6 +111,15 @@ public final class HyperFarming extends JavaPlugin {
                 System.runFinalization();
             }
         }).runTaskTimerAsynchronously(this, 200L, 600L);
+    }
+
+    private void setupConfiguration() {
+        String configResource = MultiVerItems.LEGACY ? "config_1_12.yml" : "config_1_13.yml";
+        String menuResource = MultiVerItems.LEGACY ? "menu_1_12_yml" : "menu_1_13.yml";
+        IOWorker.writeResourceToFolder(configResource, "config.yml");
+        IOWorker.updateConfig(configResource, "config.yml");
+        IOWorker.writeResourceToFolder(menuResource, "menu_1_12.yml");
+        IOWorker.updateConfig(menuResource, "menu_1_12.yml");
     }
 
     private void setupVariableMaps() {

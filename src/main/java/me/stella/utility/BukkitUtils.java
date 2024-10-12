@@ -10,6 +10,7 @@ import me.stella.plugin.data.FarmerData;
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
@@ -24,6 +25,8 @@ import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class BukkitUtils {
@@ -37,13 +40,26 @@ public class BukkitUtils {
     public static final Map<String, String> idLookupMap = new HashMap<>();
     public static SimpleDateFormat timeFormatter = new SimpleDateFormat("HH:mm:ss dd-MM-yyyy");
 
-    public static String color(String param) {
-        try {
-            Class<?> bukkitColor = Class.forName("org.bukkit.ChatColor", true, HyperFarming.inst().getServer().getClass().getClassLoader());
-            return String.valueOf(bukkitColor.getMethod("translateAlternateColorCodes", char.class, String.class)
-                    .invoke(null, '&', param));
-        } catch(Exception err) { err.printStackTrace(); }
-        return param;
+    public static String color(String message) {
+        if(!message.contains("&#"))
+            return ChatColor.translateAlternateColorCodes('&', message);
+        else {
+            try {
+                Pattern hexColorPattern = Pattern.compile("&#([a-fA-F0-9]{6})");
+                Matcher match = hexColorPattern.matcher(message);
+                StringBuffer buffer = new StringBuffer();
+                while(match.find()) {
+                    String hexColor = match.group(1);
+                    StringBuilder colorBuilder = new StringBuilder("&x");
+                    for(char c: hexColor.toCharArray())
+                        colorBuilder.append('&').append(c);
+                    match.appendReplacement(buffer, colorBuilder.toString());
+                }
+                match.appendTail(buffer);
+                return ChatColor.translateAlternateColorCodes('&', buffer.toString());
+            } catch(Throwable t) { }
+            return message;
+        }
     }
 
     public static Material returnOneOf(String... materialId) {

@@ -20,7 +20,6 @@ import java.util.UUID;
 
 public class v1_12_R1 implements NMSProtocol {
 
-    private final Class<?> baseNMSWorld;
     private final Class<?> nbtTagCompound;
     private final Class<?> nmsItemStack;
     private final Class<?> nmsEntityLiving;
@@ -28,10 +27,12 @@ public class v1_12_R1 implements NMSProtocol {
     private final Class<?> craftItemStack;
     private final Method methodSetType;
     private final Method methodGetData;
+    private final Method methodDamage;
+    private final Field fieldWorldRandom;
+    private final Field nmsStackHandle;
     private final Map<String, LegacyDataWrapper> replants;
 
     public v1_12_R1() throws Exception {
-        this.baseNMSWorld = getNMSClass("net.minecraft.server.v1_12_R1.World");
         this.nbtTagCompound = getNMSClass("net.minecraft.server.v1_12_R1.NBTTagCompound");
         this.nmsItemStack = getNMSClass("net.minecraft.server.v1_12_R1.ItemStack");
         this.nmsEntityLiving = getNMSClass("net.minecraft.server.v1_12_R1.EntityLiving");
@@ -40,6 +41,11 @@ public class v1_12_R1 implements NMSProtocol {
         Class<?> craftBlock = getNMSClass("org.bukkit.craftbukkit.v1_12_R1.block.CraftBlock");
         this.methodSetType = craftBlock.getMethod("setTypeIdAndData", int.class, byte.class, boolean.class);
         this.methodGetData = craftBlock.getMethod("getData");
+        this.methodDamage = this.nmsItemStack.getMethod("damage", int.class, this.nmsEntityLiving);
+        this.fieldWorldRandom = getNMSClass("net.minecraft.server.v1_12_R1.World").getDeclaredField("random");
+        this.nmsStackHandle = this.craftItemStack.getDeclaredField("handle");
+        this.fieldWorldRandom.setAccessible(true);
+        this.nmsStackHandle.setAccessible(true);
         this.replants = new HashMap<>();
         this.replants.put("CROPS", LegacyDataWrapper.build(59, (byte)0));
         this.replants.put("CARROT", LegacyDataWrapper.build(141, (byte)0));
@@ -60,8 +66,7 @@ public class v1_12_R1 implements NMSProtocol {
     public Random getWorldRandom(World world) {
         try {
             Object worldHandle = world.getClass().getMethod("getHandle").invoke(world);
-            Field fieldRandom = baseNMSWorld.getDeclaredField("random");
-            fieldRandom.setAccessible(true); return ((Random) fieldRandom.get(worldHandle));
+            return ((Random) this.fieldWorldRandom.get(worldHandle));
         } catch(Exception err) { err.printStackTrace(); }
         return new Random();
     }
@@ -96,11 +101,8 @@ public class v1_12_R1 implements NMSProtocol {
     @Override
     public void damageTool(Player player, ItemStack stack) {
         try {
-            Field handleField = craftItemStack.getDeclaredField("handle");
-            handleField.setAccessible(true);
-            Object nmsItem = handleField.get(stack);
-            nmsItemStack.getMethod("damage", int.class, nmsEntityLiving)
-                    .invoke(nmsItem, 1, craftPlayer.getMethod("getHandle").invoke(player));
+            Object nmsItem = this.nmsStackHandle.get(stack);
+            this.methodDamage.invoke(nmsItem, 1, craftPlayer.getMethod("getHandle").invoke(player));
         } catch(Exception err) { err.printStackTrace(); }
     }
 

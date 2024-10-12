@@ -1,0 +1,236 @@
+# GUI configuration for HyperFarming
+layout:
+  # Title of the GUI - Use %player% to get the player's name
+  title: '&fKho &enông sản &f- &8[ &b{player} &8]'
+  # The size of the inventory, could be 9, 18, 27, 36, 45, 54
+  size: 45
+elements:
+  decoration-1:
+    # The type of the icon - Check Bukkit API naming
+    material: WHITE_STAINED_GLASS_PANE
+    # Display name, leave like this if you want to clear it
+    name: '&7'
+    # Mode: DECORATION (basically does nothing) - No updates, no nothing
+    mode: DECORATION
+    # Slots where this object is present in the GUI
+    slots: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 16, 17, 18, 19, 20, 24, 25, 26, 27, 28, 29, 30, 32, 33, 34, 35, 37, 38, 39, 40, 41, 42, 43]
+  exit:
+    material: BARRIER
+    name: '&cExit'
+    lore:
+      - '&f &e► &fNhấn vào để thoát'
+    # Mode: EXIT - No updates, closes the inventory upon clicking
+    mode: EXIT
+    slot: 44
+  info:
+    # Custom heads
+    material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZGI3ZWExMGVkM2QyMDJhZWM0ZmUwYjY1YTFjZTAyZTJjNGExZmE2MWJkZGY3ODAxNDRlNzk1ZjM2MzgxOWRmMiJ9fX0=
+    name: 'Thông tin &bngười chơi'
+    # Mode: INFO - Updates the player's stats constantly
+    mode: INFO
+    # The update interval - If invalid, defaults to 5s (100 ticks)
+    update-interval: 100
+    lore:
+      - ''
+      - '&f &fCập nhật lúc: &a{update}'
+      - '&f &fĐã thu hoạch: &a{broken} &fblocks'
+      - ''
+      - '&f &fTổng thu hoạch từ khi bạn &aonline'
+      - '&f &f &f &e► &fLúa mì: &a{wheat_online}'
+      - '&f &f &f &e► &fCà rốt: &a{carrot_online}'
+      - '&f &f &f &e► &fKhoai tây: &a{potato_online}'
+      - '&f &f &f &e► &fCủ dền: &a{beetroot_online}'
+      - '&f &f &f &e► &fBí ngô: &a{pumpkin_online}'
+      - '&f &f &f &e► &fDưa hấu: &a{melon_online}'
+      - '&f &f &f &e► &fMía: &a{sugar_cane_online}'
+      - '&f &f &f &e► &fXương rồng: &a{cactus_online}'
+      - '&f &f &f &e► &fCacao: &a{cocoa_online}'
+    slot: 0
+  smart_deposit:
+    # Custom heads
+    material: CHEST
+    name: 'Gửi &chết &enông sản'
+    # Mode: SMART - Activates smart deposit
+    mode: SMART
+    # The update interval - If invalid, defaults to 5s (100 ticks)
+    update-interval: 100
+    lore:
+      - ''
+      - '&f &fNhấn vào để gửi toàn bộ &enông sản'
+      - '&f &fbạn có trong túi vào kho!'
+      - ''
+      - '&f &fKhi ấn, kho sẽ nhận được:'
+      - '&f &f &f &e► &fLúa mì: &a+{wheat}'
+      - '&f &f &f &e► &fCà rốt: &a+{carrot}'
+      - '&f &f &f &e► &fKhoai tây: &a+{potato}'
+      - '&f &f &f &e► &fCủ dền: &a+{beetroot}'
+      - '&f &f &f &e► &fBí ngô: &a+{pumpkin}'
+      - '&f &f &f &e► &fDưa hấu: &a+{melon}'
+      - '&f &f &f &e► &fMía: &a+{sugar_cane}'
+      - '&f &f &f &e► &fXương rồng: &a+{cactus}'
+      - '&f &f &f &e► &fCacao: &a+{cocoa}'
+      - ''
+      - '&f &8[ &f&oNhấn &e&ochuột trái &f&ođể xử lý &8]'
+    slot: 36
+  wheat:
+    material: WHEAT
+    name: '&8[&eFarm&8] &fLúa mì &3| &fID: &awheat'
+    slot: 11
+    # Mode: STORAGE - Support interactions with the user's internal data
+    mode: STORAGE
+    # Internal data for handling interactions - This one handles interactions with wheat
+    function: WHEAT
+    update-interval: 100
+    # Object
+    lore:
+      - ''
+      - '&f &fĐang có: &a{amount} &f/ &e{limit}'
+      - '&f'
+      - '&f Chuột &eTrái &f- Nhập số lượng muốn lấy'
+      - '&f &cShift&f+Chuột &eTrái &f- Lấy đầy túi'
+      - '&f Chuột &ePhải &f- Nhập số lượng muốn bán'
+      - '&f &cShift&f+Chuột &ePhải &f- Bán sạch kho'
+  carrot:
+    material: CARROT
+    name: '&8[&eFarm&8] &fCà rốt &3| &fID: &acarrot'
+    slot: 12
+    # Mode: STORAGE - Support interactions with the user's internal data
+    mode: STORAGE
+    # Internal data for handling interactions - This one handles interactions with wheat
+    function: CARROT
+    update-interval: 100
+    # Object
+    lore:
+      - ''
+      - '&f &fĐang có: &a{amount} &f/ &e{limit}'
+      - '&f'
+      - '&f Chuột &eTrái &f- Nhập số lượng muốn lấy'
+      - '&f &cShift&f+Chuột &eTrái &f- Lấy đầy túi'
+      - '&f Chuột &ePhải &f- Nhập số lượng muốn bán'
+      - '&f &cShift&f+Chuột &ePhải &f- Bán sạch kho'
+  potato:
+    material: POTATO
+    name: '&8[&eFarm&8] &fKhoai tây &3| &fID: &apotato'
+    slot: 13
+    # Mode: STORAGE - Support interactions with the user's internal data
+    mode: STORAGE
+    # Internal data for handling interactions - This one handles interactions with wheat
+    function: POTATO
+    update-interval: 100
+    # Object
+    lore:
+      - ''
+      - '&f &fĐang có: &a{amount} &f/ &e{limit}'
+      - '&f'
+      - '&f Chuột &eTrái &f- Nhập số lượng muốn lấy'
+      - '&f &cShift&f+Chuột &eTrái &f- Lấy đầy túi'
+      - '&f Chuột &ePhải &f- Nhập số lượng muốn bán'
+      - '&f &cShift&f+Chuột &ePhải &f- Bán sạch kho'
+  beetroot:
+    material: BEETROOT
+    name: '&8[&eFarm&8] &fCủ dền &3| &fID: &abeetroot'
+    slot: 14
+    # Mode: STORAGE - Support interactions with the user's internal data
+    mode: STORAGE
+    # Internal data for handling interactions - This one handles interactions with wheat
+    function: BEETROOT
+    update-interval: 100
+    # Object
+    lore:
+      - ''
+      - '&f &fĐang có: &a{amount} &f/ &e{limit}'
+      - '&f'
+      - '&f Chuột &eTrái &f- Nhập số lượng muốn lấy'
+      - '&f &cShift&f+Chuột &eTrái &f- Lấy đầy túi'
+      - '&f Chuột &ePhải &f- Nhập số lượng muốn bán'
+      - '&f &cShift&f+Chuột &ePhải &f- Bán sạch kho'
+  cocoa:
+    material: COCOA_BEANS
+    name: '&8[&eFarm&8] &fHạt cacao &3| &fID: &acocoa'
+    slot: 15
+    # Mode: STORAGE - Support interactions with the user's internal data
+    mode: STORAGE
+    # Internal data for handling interactions - This one handles interactions with wheat
+    function: COCOA
+    update-interval: 100
+    # Object
+    lore:
+      - ''
+      - '&f &fĐang có: &a{amount} &f/ &e{limit}'
+      - '&f'
+      - '&f Chuột &eTrái &f- Nhập số lượng muốn lấy'
+      - '&f &cShift&f+Chuột &eTrái &f- Lấy đầy túi'
+      - '&f Chuột &ePhải &f- Nhập số lượng muốn bán'
+      - '&f &cShift&f+Chuột &ePhải &f- Bán sạch kho'
+  sugar_cane:
+    material: SUGAR_CANE
+    name: '&8[&eFarm&8] &fMía &3| &fID: &asugar_cane'
+    slot: 21
+    # Mode: STORAGE - Support interactions with the user's internal data
+    mode: STORAGE
+    # Internal data for handling interactions - This one handles interactions with wheat
+    function: SUGAR_CANE
+    update-interval: 100
+    # Object
+    lore:
+      - ''
+      - '&f &fĐang có: &a{amount} &f/ &e{limit}'
+      - '&f'
+      - '&f Chuột &eTrái &f- Nhập số lượng muốn lấy'
+      - '&f &cShift&f+Chuột &eTrái &f- Lấy đầy túi'
+      - '&f Chuột &ePhải &f- Nhập số lượng muốn bán'
+      - '&f &cShift&f+Chuột &ePhải &f- Bán sạch kho'
+  pumpkin:
+    material: PUMPKIN
+    name: '&8[&eFarm&8] &fBí ngô &3| &fID: &apumpkin'
+    slot: 22
+    # Mode: STORAGE - Support interactions with the user's internal data
+    mode: STORAGE
+    # Internal data for handling interactions - This one handles interactions with wheat
+    function: PUMPKIN
+    update-interval: 100
+    # Object
+    lore:
+      - ''
+      - '&f &fĐang có: &a{amount} &f/ &e{limit}'
+      - '&f'
+      - '&f Chuột &eTrái &f- Nhập số lượng muốn lấy'
+      - '&f &cShift&f+Chuột &eTrái &f- Lấy đầy túi'
+      - '&f Chuột &ePhải &f- Nhập số lượng muốn bán'
+      - '&f &cShift&f+Chuột &ePhải &f- Bán sạch kho'
+  cactus:
+    material: CACTUS
+    name: '&8[&eFarm&8] &fXương rồng &3| &fID: &acactus'
+    slot: 23
+    # Mode: STORAGE - Support interactions with the user's internal data
+    mode: STORAGE
+    # Internal data for handling interactions - This one handles interactions with wheat
+    function: CACTUS
+    update-interval: 100
+    # Object
+    lore:
+      - ''
+      - '&f &fĐang có: &a{amount} &f/ &e{limit}'
+      - '&f'
+      - '&f Chuột &eTrái &f- Nhập số lượng muốn lấy'
+      - '&f &cShift&f+Chuột &eTrái &f- Lấy đầy túi'
+      - '&f Chuột &ePhải &f- Nhập số lượng muốn bán'
+      - '&f &cShift&f+Chuột &ePhải &f- Bán sạch kho'
+  melon:
+    material: MELON_SLICES
+    name: '&8[&eFarm&8] &fDưa hấu &3| &fID: &amelon'
+    slot: 31
+    # Mode: STORAGE - Support interactions with the user's internal data
+    mode: STORAGE
+    # Internal data for handling interactions - This one handles interactions with wheat
+    function: MELON
+    update-interval: 100
+    # Object
+    lore:
+      - ''
+      - '&f &fĐang có: &a{amount} &f/ &e{limit}'
+      - '&f'
+      - '&f Chuột &eTrái &f- Nhập số lượng muốn lấy'
+      - '&f &cShift&f+Chuột &eTrái &f- Lấy đầy túi'
+      - '&f Chuột &ePhải &f- Nhập số lượng muốn bán'
+      - '&f &cShift&f+Chuột &ePhải &f- Bán sạch kho'
