@@ -2,7 +2,7 @@
 **HyperFarming** is a plugin that aims to improve the farming experience on servers. Originally made for **LuckyVN**'s skyblock server. Built with both compability and performance in mind.
 
 > [!NOTE]
-> HyperFarming is currently compatible with `1.12.2`
+> HyperFarming is currently compatible with `1.12.2`, and `1.18.2` is in testing
 
 # For players
 - Easy to use with an interactive and smart Autocomplete Tab
