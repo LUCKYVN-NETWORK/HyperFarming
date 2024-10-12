@@ -1,6 +1,5 @@
 package me.stella.functions;
 
-import me.stella.plugin.data.FarmerData;
 import me.stella.utility.BukkitUtils;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
