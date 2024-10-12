@@ -79,7 +79,6 @@ public class FunctionDeposit {
         });
         data.increase(melonBlocks ? "MELON" : type, amountInt * (melonBlocks ? 9 : 1));
         result.forEach((slot, amount) -> inventory.getItem(slot).setAmount(amount));
-        return new String[]{"success", melonBlocks ? "MELON" : type, String.valueOf(amountInt * (melonBlocks ? 9 : 1))};
     }
 
 }

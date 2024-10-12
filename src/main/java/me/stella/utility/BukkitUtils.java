@@ -206,8 +206,6 @@ public class BukkitUtils {
     public static boolean isBasic(ItemStack stackA, ItemStack stackB) {
         if(stackA.getType() != stackB.getType())
             return false;
-        if(stackA.getDurability() != stackB.getDurability())
-            return false;
         return !stackB.hasItemMeta();
     }
 
