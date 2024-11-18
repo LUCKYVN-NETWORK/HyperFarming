@@ -140,13 +140,17 @@ public class HyperGUIBuilder {
         (new BukkitRunnable() {
             @Override
             public void run() {
-                Inventory storageGUI = buildInventory(player).join();
-                (new BukkitRunnable() {
-                    @Override
-                    public void run() {
-                        player.openInventory(storageGUI);
-                    }
-                }).runTask(HyperFarming.inst());
+                try {
+                    Inventory storageGUI = buildInventory(player).join();
+                    (new BukkitRunnable() {
+                        @Override
+                        public void run() {
+                            player.openInventory(storageGUI);
+                        }
+                    }).runTask(HyperFarming.inst());
+                } catch(Exception err) {
+                    err.printStackTrace();
+                }
             }
         }).runTaskAsynchronously(HyperFarming.inst());
     }

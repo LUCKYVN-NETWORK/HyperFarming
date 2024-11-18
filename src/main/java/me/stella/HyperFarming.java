@@ -47,7 +47,7 @@ public final class HyperFarming extends JavaPlugin {
         MultiVerItems.LEGACY = craftBukkitVer.equals("v1_12_R1");
         this.setupConfiguration();
         HyperSettings settings = new HyperSettings(new File(getDataFolder(), "config.yml"));
-        HyperGUIBuilder guiBuilder = new HyperGUIBuilder(new File(getDataFolder(), "menu_1_12.yml"));
+        HyperGUIBuilder guiBuilder = new HyperGUIBuilder(new File(getDataFolder(), "menu.yml"));
         File dataDirectory = new File(getDataFolder(), "data");
         if(!dataDirectory.exists())
             dataDirectory.mkdirs();
@@ -104,22 +104,15 @@ public final class HyperFarming extends JavaPlugin {
                 getServer().getOnlinePlayers().forEach(PlayerInOutListener::handshakeIn);
             }
         }).runTask(this);
-        (new BukkitRunnable() {
-            @Override
-            public void run() {
-                System.gc();
-                System.runFinalization();
-            }
-        }).runTaskTimerAsynchronously(this, 200L, 600L);
     }
 
     private void setupConfiguration() {
         String configResource = MultiVerItems.LEGACY ? "config_1_12.yml" : "config_1_13.yml";
-        String menuResource = MultiVerItems.LEGACY ? "menu_1_12_yml" : "menu_1_13.yml";
+        String menuResource = MultiVerItems.LEGACY ? "menu_1_12.yml" : "menu_1_13.yml";
         IOWorker.writeResourceToFolder(configResource, "config.yml");
         IOWorker.updateConfig(configResource, "config.yml");
-        IOWorker.writeResourceToFolder(menuResource, "menu_1_12.yml");
-        IOWorker.updateConfig(menuResource, "menu_1_12.yml");
+        IOWorker.writeResourceToFolder(menuResource, "menu.yml");
+        IOWorker.updateConfig(menuResource, "menu.yml");
     }
 
     private void setupVariableMaps() {

@@ -11,7 +11,6 @@ import me.stella.support.SupportedPlugin;
 import me.stella.utility.BukkitUtils;
 import org.bukkit.*;
 import org.bukkit.block.Block;
-import org.bukkit.block.data.BlockData;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -27,7 +26,6 @@ import java.lang.reflect.Method;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.logging.Level;
 
 public class PlayerFarmListener implements Listener {
     private final Map<String, CropsWrapper> storable;
