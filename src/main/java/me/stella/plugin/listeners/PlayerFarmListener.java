@@ -106,9 +106,11 @@ public class PlayerFarmListener implements Listener {
         this.seededTypes.put("BEETROOT", Material.BEETROOT_SEEDS);
     }
 
-    @EventHandler(priority = EventPriority.HIGHEST)
+    @EventHandler
     public void onBreak(final BlockBreakEvent event) {
         final Player player = event.getPlayer();
+        if(!player.hasPermission("farm.use"))
+            return;
         final Block block = event.getBlock();
         final World blockWorld = block.getWorld();
         final Material blockType = block.getType();

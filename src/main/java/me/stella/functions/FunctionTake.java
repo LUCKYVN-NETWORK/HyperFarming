@@ -17,10 +17,17 @@ public class FunctionTake {
         HyperFarming.console.log(Level.INFO, "[HyperFarming] " + player.getName() + " requested withdrawal with params: " + Arrays.toString(params));
         if (params.length != 2)
             return new String[]{"fail", "param_none"};
+        String type = params[0].toUpperCase();
+        if (type.contains("MELON"))
+            return handleMelonWithdrawal(player, params, type);
+        else
+            return handleOtherCropWithdrawal(player, params, type);
+    }
+
+    private static String[] handleMelonWithdrawal(Player player, String[] params, String type) {
         String blockType = MultiVerItems.LEGACY ? "MELON_BLOCK" : "MELON";
         String itemType = MultiVerItems.LEGACY ? "MELON" : "MELON_SLICE";
-        String type = params[0].toUpperCase();
-        boolean melonBlocks = type.contains("MELON") && BukkitUtils.melonCompression.contains(player.getUniqueId());
+        boolean melonBlocks = type.equals("MELON_BLOCK") && BukkitUtils.melonCompression.contains(player.getUniqueId());
         if (!FarmerData.getDataTypes().contains(type))
             return new String[]{"fail", "invalid_type"};
         FarmerData data = (FarmerData) player.getMetadata("farmerData").get(0).value();
@@ -59,9 +66,48 @@ public class FunctionTake {
         }
         if (amountInt < 1)
             return new String[]{"fail", "invalid_int", amount};
-        int selling = Math.min(amountInt, available);
-        data.decrease(type, selling);
-        return new String[]{"success", melonBlocks ? "MELON" : type, String.valueOf(selling)};
+        int withdrawalAmount = Math.min(amountInt, available);
+        data.decrease(type, withdrawalAmount);
+        return new String[]{"success", "MELON", String.valueOf(withdrawalAmount)};
     }
 
+    private static String[] handleOtherCropWithdrawal(Player player, String[] params, String type) {
+        if (!FarmerData.getDataTypes().contains(type))
+            return new String[]{"fail", "invalid_type"};
+        FarmerData data = (FarmerData) player.getMetadata("farmerData").get(0).value();
+        int balance = data.getData(type);
+        if (balance == 0)
+            return new String[]{"fail", "insufficient_balance", type};
+        ItemStack typeItem = BukkitUtils.idItemMap.get(type).clone();
+        int available = 0;
+        PlayerInventory inventory = player.getInventory();
+        for (int i = 0; i < 36; i++) {
+            ItemStack item = inventory.getItem(i);
+            if (item == null) {
+                available += 64;
+                continue;
+            }
+            if (BukkitUtils.isBasic(typeItem, item)) {
+                available += (64 - item.getAmount());
+            }
+        }
+        String amount = params[1];
+        int amountInt = 0;
+        if (amount.equals("all"))
+            amountInt = balance;
+        else {
+            try {
+                amountInt = Integer.parseInt(amount);
+            } catch (Exception err) {
+                err.printStackTrace();
+                return new String[]{"fail", "invalid_int", amount};
+            }
+            amountInt = Math.min(amountInt, balance);
+        }
+        if (amountInt < 1)
+            return new String[]{"fail", "invalid_int", amount};
+        int withdrawalAmount = Math.min(amountInt, available);
+        data.decrease(type, withdrawalAmount);
+        return new String[]{"success", type, String.valueOf(withdrawalAmount)};
+    }
 }
