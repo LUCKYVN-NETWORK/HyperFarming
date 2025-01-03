@@ -217,7 +217,7 @@ elements:
       - '&f Chuột &ePhải &f- Nhập số lượng muốn bán'
       - '&f &cShift&f+Chuột &ePhải &f- Bán sạch kho'
   melon:
-    material: MELON_SLICES
+    material: MELON
     name: '&8[&eFarm&8] &fDưa hấu &3| &fID: &amelon'
     slot: 31
     # Mode: STORAGE - Support interactions with the user's internal data

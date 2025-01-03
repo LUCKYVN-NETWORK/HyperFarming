@@ -13,7 +13,7 @@ engine:
   # Which crops should not receive bonus from fortune?
   fortune-blacklist:
     - WHEAT
-    - BEETROOT
+    - BEETROOTS
     - PUMPKIN
     - SUGAR_CANE
     - CACTUS

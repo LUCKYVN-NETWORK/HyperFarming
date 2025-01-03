@@ -1,5 +1,8 @@
 package me.stella.nms.versions;
 
+import com.mojang.authlib.GameProfile;
+import com.mojang.authlib.properties.Property;
+import me.stella.HyperFarming;
 import me.stella.nms.NMSProtocol;
 import me.stella.objects.LegacyDataWrapper;
 import me.stella.utility.BukkitUtils;
@@ -10,6 +13,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.SkullMeta;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -17,6 +21,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
+import java.util.logging.Level;
 
 public class v1_12_R1 implements NMSProtocol {
 
@@ -110,20 +115,14 @@ public class v1_12_R1 implements NMSProtocol {
     public ItemStack buildSkull(String texture) {
         try {
             Class<?> material = getNMSClass("org.bukkit.Material");
-            Class<?> property = getNMSClass("com.mojang.authlib.properties.Property");
-            Class<?> forwardingMap = getNMSClass("com.google.common.collect.ForwardingMultimap");
-            Class<?> gameProfile = getNMSClass("com.mojang.authlib.GameProfile");
-            Material skullMaterial = (Material) material.getMethod("getMaterial", String.class).invoke(null, "SKULL_ITEM");
-            ItemStack hardStack = new ItemStack(skullMaterial, 1, (short) 3);
-            ItemMeta skullMeta = hardStack.getItemMeta();
+            Material skullMaterial = (Material) material.getMethod("getMaterial", String.class).invoke(null, "PLAYER_HEAD");
+            ItemStack hardStack = new ItemStack(skullMaterial);
+            SkullMeta skullMeta = (SkullMeta) hardStack.getItemMeta();
             Field skullProfile = skullMeta.getClass().getDeclaredField("profile"); skullProfile.setAccessible(true);
-            Object gameProfileObject = skullProfile.get(skullMeta);
+            GameProfile gameProfileObject = (GameProfile) skullProfile.get(skullMeta);
             if(gameProfileObject == null)
-                gameProfileObject = gameProfile.getConstructor(UUID.class, String.class)
-                        .newInstance(UUID.randomUUID(), "skull_" + System.currentTimeMillis());
-            Object propertyMap = gameProfile.getMethod("getProperties").invoke(gameProfileObject);
-            Object textureProperty = property.getConstructors()[0].newInstance("textures", texture);
-            forwardingMap.getMethod("put", Object.class, Object.class).invoke(propertyMap, "textures", textureProperty);
+                gameProfileObject = new GameProfile(UUID.randomUUID(), "skull_" + System.currentTimeMillis());
+            gameProfileObject.getProperties().put("textures", new Property("textures", texture));
             skullProfile.set(skullMeta, gameProfileObject);
             hardStack.setItemMeta(skullMeta);
             return hardStack;

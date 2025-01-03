@@ -1,6 +1,7 @@
 package me.stella.functions;
 
 import me.stella.HyperFarming;
+import me.stella.nms.MultiVerItems;
 import me.stella.plugin.data.FarmerData;
 import me.stella.utility.BukkitUtils;
 import org.bukkit.entity.Player;
@@ -17,69 +18,114 @@ public class FunctionDeposit {
 
     public static String[] deposit(Player player, String[] params) {
         HyperFarming.console.log(Level.INFO, "[HyperFarming] " + player.getName() + " requested deposit with params: " + Arrays.toString(params));
-        if(params.length != 2)
+        if (params.length != 2)
             return new String[]{"fail", "param_none"};
         String type = params[0].toUpperCase();
-        String versionBlock = BukkitUtils.returnOneOf("MELON_BLOCK", "MELON").name();
-        boolean melonBlocks = type.equals(versionBlock) && BukkitUtils.melonCompression.contains(player.getUniqueId());
-        if(!melonBlocks && !FarmerData.getDataTypes().contains(type))
+        boolean melonBlocks = type.contains("MELON") && BukkitUtils.melonCompression.contains(player.getUniqueId());
+        if (melonBlocks)
+            type = "MELON";
+        if (!FarmerData.getDataTypes().contains(type))
             return new String[]{"fail", "invalid_type"};
-        ItemStack typeItem = BukkitUtils.idItemMap.get(type).clone();
-        int available = 0;
+        FarmerData data = (FarmerData) player.getMetadata("farmerData").get(0).value();
+        ItemStack blockItem = BukkitUtils.idItemMap.get(melonBlocks ? "MELON_BLOCK" : type).clone();
+        ItemStack sliceItem = BukkitUtils.idItemMap.get(type).clone();
+        HyperFarming.console.log(Level.INFO, String.valueOf(blockItem));
+        HyperFarming.console.log(Level.INFO, String.valueOf(sliceItem));
         PlayerInventory inventory = player.getInventory();
-        Map<Integer, Integer> depositable = new HashMap<>();
-        for(int i = 0; i < 36;  i++) {
-            ItemStack item = inventory.getItem(i);
-            if(item == null)
-                continue;
-            if(BukkitUtils.isBasic(typeItem, item)) {
-                available += item.getAmount();
-                depositable.put(i, item.getAmount());
+        Map<Integer, Integer> depositableBlocks = new HashMap<>();
+        Map<Integer, Integer> depositableSlices = new HashMap<>();
+        int availableBlocks = 0;
+        int availableSlices = 0;
+        if (melonBlocks) {
+            for (int i = 0; i < 36; i++) {
+                ItemStack item = inventory.getItem(i);
+                if (item == null) continue;
+
+                if (BukkitUtils.isBasic(blockItem, item)) {
+                    availableBlocks += item.getAmount();
+                    depositableBlocks.put(i, item.getAmount());
+                } else if (BukkitUtils.isBasic(sliceItem, item)) {
+                    availableSlices += item.getAmount();
+                    depositableSlices.put(i, item.getAmount());
+                }
+            }
+        } else {
+            for (int i = 0; i < 36; i++) {
+                ItemStack item = inventory.getItem(i);
+                if (item == null) continue;
+
+                if (BukkitUtils.isBasic(sliceItem, item)) {
+                    availableSlices += item.getAmount();
+                    depositableSlices.put(i, item.getAmount());
+                }
             }
         }
-        if(available == 0)
+        int totalAvailableSlices = (availableBlocks * 9) + availableSlices;
+        if (totalAvailableSlices == 0)
             return new String[]{"fail", "insufficient_balance", type};
-        if(melonBlocks)
-            available *= 9;
-        String paramAmount = params[1]; int amountInt;
-        if(paramAmount.equals("all")) {
-            amountInt = available;
+        String paramAmount = params[1];
+        int amountInt;
+        if (paramAmount.equals("all")) {
+            amountInt = totalAvailableSlices;
         } else {
             try {
                 amountInt = Integer.parseInt(paramAmount);
-            } catch(Exception err) {
+            } catch (Exception err) {
                 err.printStackTrace();
                 return new String[]{"fail", "invalid_int", paramAmount};
             }
         }
-        if(amountInt < 1)
-            return new String[] { "fail", "invalid_int", paramAmount };
-        if(melonBlocks)
-            amountInt *= 9;
-        FarmerData data = (FarmerData) player.getMetadata("farmerData").get(0).value();
-        amountInt = Math.min(data.getLimit() - data.getData(melonBlocks ? "MELON" : type), Math.min(amountInt, available));
-        if(melonBlocks)
-            amountInt /= 9;
-        if(amountInt == 0)
-            return new String[]{ "fail", "storage_full" };
-        Map<Integer, Integer> result = new HashMap<>();
-        AtomicInteger availableThreadSafe = new AtomicInteger(amountInt);
-        depositable.forEach((slot, amount) -> {
-            int availableCurrent = availableThreadSafe.get();
-            if(availableCurrent <= 0)
-                return;
-            if(availableCurrent > amount) {
-                result.put(slot, 0);
-                availableCurrent -= amount;
-            } else {
-                result.put(slot, amount - availableCurrent);
-                availableCurrent = 0;
-            }
-            availableThreadSafe.set(availableCurrent);
-        });
-        data.increase(melonBlocks ? "MELON" : type, amountInt * (melonBlocks ? 9 : 1));
-        result.forEach((slot, amount) -> inventory.getItem(slot).setAmount(amount));
-        return new String[]{"success", melonBlocks ? "MELON" : type, String.valueOf(amountInt * (melonBlocks ? 9 : 1))};
+        if (amountInt < 1)
+            return new String[]{"fail", "invalid_int", paramAmount};
+        int depositAmount = Math.min(amountInt, totalAvailableSlices);
+        depositAmount = Math.min(depositAmount, data.getLimit() - data.getData("MELON"));
+        if (depositAmount == 0)
+            return new String[]{"fail", "storage_full"};
+        if (melonBlocks) {
+            AtomicInteger remainingAmount = new AtomicInteger(depositAmount);
+            depositableBlocks.forEach((slot, amount) -> {
+                int needed = remainingAmount.get();
+                if (needed <= 0)
+                    return;
+                if (needed >= amount * 9) {
+                    inventory.clear(slot);
+                    remainingAmount.addAndGet(-amount * 9);
+                } else {
+                    int blocksUsed = needed / 9;
+                    inventory.getItem(slot).setAmount(amount - blocksUsed);
+                    remainingAmount.addAndGet(-(blocksUsed * 9));
+                }
+            });
+            depositableSlices.forEach((slot, amount) -> {
+                int needed = remainingAmount.get();
+                if (needed <= 0)
+                    return;
+                if (needed >= amount) {
+                    inventory.clear(slot);
+                    remainingAmount.addAndGet(-amount);
+                } else {
+                    inventory.getItem(slot).setAmount(amount - needed);
+                    remainingAmount.set(0);
+                }
+            });
+            data.increase("MELON", depositAmount);
+        } else {
+            AtomicInteger remainingAmount = new AtomicInteger(depositAmount);
+            depositableSlices.forEach((slot, amount) -> {
+                int needed = remainingAmount.get();
+                if (needed <= 0)
+                    return;
+                if (needed >= amount) {
+                    inventory.clear(slot);
+                    remainingAmount.addAndGet(-amount);
+                } else {
+                    inventory.getItem(slot).setAmount(amount - needed);
+                    remainingAmount.set(0);
+                }
+            });
+            data.increase("MELON", depositAmount);
+        }
+        return new String[]{"success", "MELON", String.valueOf(depositAmount)};
     }
 
 }

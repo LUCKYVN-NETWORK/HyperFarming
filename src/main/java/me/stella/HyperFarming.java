@@ -18,6 +18,7 @@ import me.stella.support.economy.VaultFramework;
 import me.stella.support.impl.SuperiorSkyblockImpl;
 import me.stella.support.impl.VanillaImpl;
 import me.stella.utility.BukkitUtils;
+import me.stella.utility.ConsoleLogger;
 import org.bukkit.Bukkit;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.plugin.PluginManager;
@@ -29,11 +30,10 @@ import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public final class HyperFarming extends JavaPlugin {
 
-    public static final Logger console = Logger.getLogger("Minecraft");
+    public static final ConsoleLogger console = new ConsoleLogger(Bukkit.getServer());
     private static HyperFarming main;
 
     public static HyperFarming inst() {

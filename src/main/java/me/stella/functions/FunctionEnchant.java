@@ -1,11 +1,13 @@
 package me.stella.functions;
 
+import me.stella.HyperFarming;
 import me.stella.HyperVariables;
 import me.stella.nms.NMSProtocol;
 import me.stella.plugin.data.FarmerData;
 import me.stella.utility.BukkitUtils;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.Arrays;
 import java.util.List;
@@ -14,7 +16,7 @@ public class FunctionEnchant {
 
     private static final List<String> supported = Arrays.asList("multiplier", "replant");
 
-    public static String[] enchant(Player player, String[] params) {
+    public static String[] enchant(final Player player, String[] params) {
         ItemStack hand = player.getInventory().getItemInMainHand();
         if(hand == null || hand.getType().name().equals("AIR"))
             return new String[] { "fail", "hand_empty" };
@@ -47,8 +49,14 @@ public class FunctionEnchant {
                     enchantProcessor[1] = "1";
                     break;
             }
-            player.getInventory().setItemInMainHand(HyperVariables.get(NMSProtocol.class).setNBTTag(
-                    player.getInventory().getItemInMainHand(), enchantProcessor[0], Integer.parseInt(enchantProcessor[1])));
+            final ItemStack output = HyperVariables.get(NMSProtocol.class).setNBTTag(
+                    player.getInventory().getItemInMainHand(), enchantProcessor[0], Integer.parseInt(enchantProcessor[1]));
+            (new BukkitRunnable() {
+                @Override
+                public void run() {
+                    player.getInventory().setItemInMainHand(output);
+                }
+            }).runTask(HyperFarming.inst());
             return new String[]{ "success", enchantProcessor[0], enchantProcessor[1] };
         } catch(Exception err) { return new String[] { "fail", "param_none" }; }
     }
