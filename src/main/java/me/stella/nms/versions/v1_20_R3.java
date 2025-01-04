@@ -35,12 +35,14 @@ public class v1_20_R3 implements NMSProtocol {
     private final Class<?> materialBukkit;
     private final Class<?> craftBlockData;
     private final Class<?> craftItemStack;
+    private final Class<?> randomSource;
     private final Method setType;
     private final Method getData;
     private final Method getNMS;
     private final Field blockGeneratorAccess;
     private final Field blockPos;
     private final Map<String, Object> blockDataBank;
+    private final Class<?> craftWorld;
 
     public v1_20_R3() throws Exception {
         this.baseNMSWorld = getNMSClass("net.minecraft.world.level.World");
@@ -50,9 +52,11 @@ public class v1_20_R3 implements NMSProtocol {
         this.nbtTagCompound = getNMSClass("net.minecraft.nbt.NBTTagCompound");
         this.nmsItemStack = getNMSClass("net.minecraft.world.item.ItemStack");
         this.nmsPlayer = getNMSClass("net.minecraft.server.level.EntityPlayer");
+        this.randomSource = getNMSClass("net.minecraft.util.RandomSource");
         this.craftBlockData = getNMSClass("org.bukkit.craftbukkit.v1_20_R3.block.data.CraftBlockData");
         this.materialBukkit = getNMSClass("org.bukkit.Material");
         this.craftItemStack = getNMSClass("org.bukkit.craftbukkit.v1_20_R3.inventory.CraftItemStack");
+        this.craftWorld = getNMSClass("org.bukkit.craftbukkit.v1_20_R3.CraftWorld");
         Class<?> craftBukkitBlock = getNMSClass("org.bukkit.craftbukkit.v1_20_R3.block.CraftBlock");
         this.setType = craftBukkitBlock.getMethod("setTypeAndData", this.generatorAccess, this.blockPosition, this.iBlockData, this.iBlockData, boolean.class);
         this.getData = craftBukkitBlock.getMethod("getData");
@@ -81,7 +85,7 @@ public class v1_20_R3 implements NMSProtocol {
     @Override
     public Random getWorldRandom(World world) {
         try {
-            Object handle = world.getClass().getMethod("getHandle").invoke(world);
+            Object handle = this.craftWorld.getMethod("getHandle").invoke(world);
             Thread worldThread = (Thread) baseNMSWorld.getField("c").get(handle);
             long seedThread = ((long)Thread.activeCount()) << ((long)worldThread.getPriority());
             long seedH = (seedThread ^ 0x5DEECE66DL) * 0xFFFFFFFFFFFFL;
@@ -121,9 +125,10 @@ public class v1_20_R3 implements NMSProtocol {
         try {
             Field handleField = this.craftItemStack.getDeclaredField("handle");
             handleField.setAccessible(true);
+            Object world = this.craftWorld.getMethod("getHandle").invoke(player.getWorld());
             Object handle = handleField.get(stack);
-            this.nmsItemStack.getMethod("a", int.class, Random.class, this.nmsPlayer)
-                    .invoke(handle, 1, getWorldRandom(player.getWorld()), player.getClass().getMethod("getHandle").invoke(player));
+            this.nmsItemStack.getMethod("hurt", int.class, this.randomSource, getNMSClass("net.minecraft.world.entity.EntityLiving"))
+                    .invoke(handle, 1, this.baseNMSWorld.getField("z").get(world), player.getClass().getMethod("getHandle").invoke(player));
         } catch(Exception err) { err.printStackTrace(); }
     }
 
@@ -135,10 +140,9 @@ public class v1_20_R3 implements NMSProtocol {
             ItemStack hardStack = new ItemStack(skullMaterial);
             SkullMeta skullMeta = (SkullMeta) hardStack.getItemMeta();
             assert skullMeta != null;
-            Field skullProfile = skullMeta.getClass().getDeclaredField("profile"); skullProfile.setAccessible(true);
-            GameProfile gameProfileObject = (GameProfile) skullProfile.get(skullMeta);
-            if(gameProfileObject == null)
-                gameProfileObject = new GameProfile(UUID.randomUUID(), "skull_" + System.currentTimeMillis());
+            Field skullProfile = skullMeta.getClass().getDeclaredField("profile");
+            skullProfile.setAccessible(true);
+            GameProfile gameProfileObject = new GameProfile(UUID.randomUUID(), "");
             gameProfileObject.getProperties().put("textures", new Property("textures", texture));
             skullProfile.set(skullMeta, gameProfileObject);
             hardStack.setItemMeta(skullMeta);

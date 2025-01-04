@@ -18,7 +18,7 @@ public class FunctionEnchant {
 
     public static String[] enchant(final Player player, String[] params) {
         ItemStack hand = player.getInventory().getItemInMainHand();
-        if(hand == null || hand.getType().name().equals("AIR"))
+        if(hand.getType().name().equals("AIR"))
             return new String[] { "fail", "hand_empty" };
         if(!BukkitUtils.tools.contains(hand.getType()))
             return new String[] { "fail", "not_supported_tools" };
@@ -51,12 +51,8 @@ public class FunctionEnchant {
             }
             final ItemStack output = HyperVariables.get(NMSProtocol.class).setNBTTag(
                     player.getInventory().getItemInMainHand(), enchantProcessor[0], Integer.parseInt(enchantProcessor[1]));
-            (new BukkitRunnable() {
-                @Override
-                public void run() {
-                    player.getInventory().setItemInMainHand(output);
-                }
-            }).runTask(HyperFarming.inst());
+            player.getInventory().setItemInMainHand(output);
+            player.updateInventory();
             return new String[]{ "success", enchantProcessor[0], enchantProcessor[1] };
         } catch(Exception err) { return new String[] { "fail", "param_none" }; }
     }

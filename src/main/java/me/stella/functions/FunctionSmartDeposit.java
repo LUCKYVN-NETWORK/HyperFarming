@@ -29,7 +29,7 @@ public class FunctionSmartDeposit {
             data.put(key, data.getOrDefault(key, 0) + item.getAmount());
         }
         List<String[]> responses = new ArrayList<>();
-        data.forEach((type, count) -> responses.add(FunctionDeposit.deposit(player, new String[]{ type, String.valueOf(count) })));
+        data.forEach((type, count) -> responses.add(FunctionDeposit.deposit(player, new String[]{ type, "all" })));
         return responses;
     }
 

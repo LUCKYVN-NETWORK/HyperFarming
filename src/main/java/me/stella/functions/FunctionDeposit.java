@@ -1,5 +1,6 @@
 package me.stella.functions;
 
+import javassist.I;
 import me.stella.HyperFarming;
 import me.stella.nms.MultiVerItems;
 import me.stella.plugin.data.FarmerData;
@@ -28,13 +29,11 @@ public class FunctionDeposit {
     }
 
     private static String[] handleMelonDeposit(Player player, String[] params, String type) {
-        boolean melonBlocks = type.equals("MELON_BLOCK") && BukkitUtils.melonCompression.contains(player.getUniqueId());
-        if (melonBlocks)
-            type = "MELON";
+        type = "MELON";
         if (!FarmerData.getDataTypes().contains(type))
             return new String[]{"fail", "invalid_type"};
         FarmerData data = (FarmerData) player.getMetadata("farmerData").get(0).value();
-        ItemStack blockItem = BukkitUtils.idItemMap.get(melonBlocks ? "MELON_BLOCK" : type).clone();
+        ItemStack blockItem = BukkitUtils.idItemMap.get("MELON_BLOCK").clone();
         ItemStack sliceItem = BukkitUtils.idItemMap.get(type).clone();
         PlayerInventory inventory = player.getInventory();
         Map<Integer, Integer> depositableBlocks = new HashMap<>();
@@ -44,7 +43,6 @@ public class FunctionDeposit {
         for (int i = 0; i < 36; i++) {
             ItemStack item = inventory.getItem(i);
             if (item == null) continue;
-
             if (BukkitUtils.isBasic(blockItem, item)) {
                 availableBlocks += item.getAmount();
                 depositableBlocks.put(i, item.getAmount());

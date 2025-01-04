@@ -14,11 +14,12 @@ import org.bukkit.block.Block;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
-import org.bukkit.event.EventPriority;
+import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
+import org.bukkit.plugin.RegisteredListener;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
@@ -75,15 +76,19 @@ public class PlayerFarmListener implements Listener {
     public PlayerFarmListener() {
         this.storable = new HashMap<>();
         this.storable.put("CROPS", CropsWrapper.build("WHEAT", new ItemStack(Material.WHEAT)));
+        this.storable.put("wheat", CropsWrapper.build("WHEAT", new ItemStack(Material.WHEAT)));
         this.storable.put("POTATO", CropsWrapper.build("POTATO", new ItemStack(Objects.requireNonNull(BukkitUtils.returnOneOf("POTATO_ITEM", "POTATO")))));
         this.storable.put("POTATOES", CropsWrapper.build("POTATO", new ItemStack(Objects.requireNonNull(BukkitUtils.returnOneOf("POTATO_ITEM", "POTATO")))));
         this.storable.put("CARROT", CropsWrapper.build("CARROT", new ItemStack(Objects.requireNonNull(BukkitUtils.returnOneOf("CARROT_ITEM", "CARROT")))));
         this.storable.put("CARROTS", CropsWrapper.build("CARROT", new ItemStack(Objects.requireNonNull(BukkitUtils.returnOneOf("CARROT_ITEM", "CARROT")))));
         this.storable.put("BEETROOT_BLOCK", CropsWrapper.build("BEETROOT", new ItemStack(Material.BEETROOT)));
+        this.storable.put("BEETROOTS", CropsWrapper.build("BEETROOT", new ItemStack(Material.BEETROOT)));
         this.storable.put("MELON_BLOCK", CropsWrapper.build("MELON", new ItemStack(Objects.requireNonNull(BukkitUtils.returnOneOf("MELON_SLICES", "MELON")))));
+        this.storable.put("MELON", CropsWrapper.build("MELON", new ItemStack(Objects.requireNonNull(BukkitUtils.returnOneOf("MELON_SLICES", "MELON")))));
         this.storable.put("PUMPKIN", CropsWrapper.build("PUMPKIN", new ItemStack(Material.PUMPKIN)));
         this.storable.put("COCOA", CropsWrapper.build("COCOA", MultiVerItems.buildCocoaStack()));
         this.storable.put("SUGAR_CANE_BLOCK", CropsWrapper.build("SUGAR_CANE", new ItemStack(Material.SUGAR_CANE)));
+        this.storable.put("SUGAR_CANE", CropsWrapper.build("SUGAR_CANE", new ItemStack(Material.SUGAR_CANE)));
         this.storable.put("CACTUS", CropsWrapper.build("CACTUS", new ItemStack(Material.CACTUS)));
         this.maxGrowth = new HashMap<>();
         this.maxGrowth.put("CROPS", 7);
@@ -140,7 +145,10 @@ public class PlayerFarmListener implements Listener {
                 event.setCancelled(true);
                 return;
             }
-            handleFarmQuest(player, event);
+            BlockBreakEvent cloneEvent = new BlockBreakEvent(block, player);
+            handleFarmQuest(cloneEvent);
+            handleAuraSkillXp(cloneEvent);
+            handleAscensionItemXp(cloneEvent);
             List<Block> toBreak = new ArrayList<>();
             if(blockType.name().equals("CACTUS") || blockType.name().contains("SUGAR_CANE")) {
                 Location blockLoc = block.getLocation().clone();
@@ -251,7 +259,7 @@ public class PlayerFarmListener implements Listener {
         }
     }
 
-    private void handleFarmQuest(Player player, BlockBreakEvent event) {
+    private void handleFarmQuest(BlockBreakEvent event) {
         try {
             if(BukkitUtils.isPluginEnabled("Quests")) {
                 Plugin pluginQuests = Bukkit.getPluginManager().getPlugin("Quests");
@@ -261,6 +269,36 @@ public class PlayerFarmListener implements Listener {
                 Method methodHandle = farmTask.getClass().getDeclaredMethod("onBlockBreak", BlockBreakEvent.class);
                 methodHandle.setAccessible(true);
                 methodHandle.invoke(farmTask, event);
+            }
+        } catch(Throwable t) {}
+    }
+
+    private void handleAuraSkillXp(BlockBreakEvent event) {
+        try {
+            if(BukkitUtils.isPluginEnabled("AuraSkills")) {
+                Plugin auraPlugin = Bukkit.getPluginManager().getPlugin("AuraSkills");
+                Object levelManager = auraPlugin.getClass().getMethod("getLevelManager").invoke(auraPlugin);
+                Class<?> blockLeveler = Class.forName("dev.aurelium.auraskills.bukkit.source.BlockLeveler", true, auraPlugin.getClass().getClassLoader());
+                Object leveler = levelManager.getClass().getMethod("getLeveler", Class.class)
+                        .invoke(levelManager, blockLeveler);
+                leveler.getClass().getMethod("onBreak", BlockBreakEvent.class).invoke(leveler, event);
+            }
+        } catch(Throwable t) {}
+    }
+
+    private void handleAscensionItemXp(BlockBreakEvent event) {
+        try {
+            if(BukkitUtils.isPluginEnabled("Ascension")) {
+                Plugin ascensionPlugin = Bukkit.getPluginManager().getPlugin("Ascension");
+                ArrayList<RegisteredListener> listeners = HandlerList.getRegisteredListeners(ascensionPlugin);
+                listeners.stream().filter(registration -> registration.getListener().getClass().getSimpleName().equals("EntityInteractionListener"))
+                        .findFirst().ifPresent(listener -> {
+                            try {
+                                Listener listenerObj = listener.getListener();
+                                listenerObj.getClass().getMethod("onBlockBreak", BlockBreakEvent.class)
+                                        .invoke(listenerObj, event);
+                            } catch(Throwable t2) {}
+                        });
             }
         } catch(Throwable t) {}
     }

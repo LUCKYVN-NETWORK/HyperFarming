@@ -25,16 +25,14 @@ public class FunctionTake {
     }
 
     private static String[] handleMelonWithdrawal(Player player, String[] params, String type) {
-        String blockType = MultiVerItems.LEGACY ? "MELON_BLOCK" : "MELON";
-        String itemType = MultiVerItems.LEGACY ? "MELON" : "MELON_SLICE";
-        boolean melonBlocks = type.equals("MELON_BLOCK") && BukkitUtils.melonCompression.contains(player.getUniqueId());
+        boolean melonBlocks = BukkitUtils.melonCompression.contains(player.getUniqueId());
         if (!FarmerData.getDataTypes().contains(type))
             return new String[]{"fail", "invalid_type"};
         FarmerData data = (FarmerData) player.getMetadata("farmerData").get(0).value();
         int balance = data.getData(type);
         if (balance == 0)
             return new String[]{"fail", "insufficient_balance", type};
-        ItemStack typeItem = BukkitUtils.idItemMap.get(melonBlocks ? blockType : itemType).clone();
+        ItemStack typeItem = BukkitUtils.idItemMap.get(type).clone();
         int available = 0;
         PlayerInventory inventory = player.getInventory();
         for (int i = 0; i < 36; i++) {
@@ -48,7 +46,7 @@ public class FunctionTake {
             }
         }
         if (melonBlocks) {
-            available--;
+            available -= 64;
             available *= 9;
         }
         String amount = params[1];

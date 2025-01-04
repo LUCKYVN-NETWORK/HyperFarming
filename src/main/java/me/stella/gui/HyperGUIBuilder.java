@@ -33,6 +33,7 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
+import java.util.logging.Level;
 import java.util.stream.Collectors;
 
 public class HyperGUIBuilder {
@@ -445,7 +446,7 @@ public class HyperGUIBuilder {
                     continue;
                 data.put(key, data.getOrDefault(key, 0) + item.getAmount());
             }
-            if(BukkitUtils.melonCompression.contains(player.getUniqueId()))
+            if(BukkitUtils.melonCompression.contains(player.getUniqueId()) || data.containsKey("MELON_BLOCK"))
                 data.put("MELON", data.getOrDefault("MELON", 0) + data.getOrDefault("MELON_BLOCK", 0) * 9);
             ItemStack buttonIcon = button.getBase().clone();
             ItemMeta buttonMeta = buttonIcon.getItemMeta();

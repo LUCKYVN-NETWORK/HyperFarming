@@ -13,10 +13,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 
@@ -75,7 +72,7 @@ public class CommandTake implements FarmSubCommand {
         }
         int amount = Integer.parseInt(responseTake[2]);
         if(BukkitUtils.melonCompression.contains(player.getUniqueId()) && responseTake[1].equals("MELON")) {
-            ItemStack melonBlock = new ItemStack(BukkitUtils.returnOneOf("MELON_BLOCK", "MELON")).clone();
+            ItemStack melonBlock = new ItemStack(Objects.requireNonNull(BukkitUtils.returnOneOf("MELON_BLOCK", "MELON"))).clone();
             int amountBlock = amount / 9; int spare = amount % 9;
             for(ItemStack blockStack: BukkitUtils.buildItemStream(melonBlock, amountBlock))
                 player.getInventory().addItem(blockStack);
