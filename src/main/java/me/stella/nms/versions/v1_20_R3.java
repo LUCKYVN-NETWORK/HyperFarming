@@ -2,6 +2,7 @@ package me.stella.nms.versions;
 
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
+import com.mojang.authlib.properties.PropertyMap;
 import me.stella.HyperFarming;
 import me.stella.nms.NMSProtocol;
 import me.stella.utility.BukkitUtils;
@@ -135,16 +136,16 @@ public class v1_20_R3 implements NMSProtocol {
     @Override
     public ItemStack buildSkull(String texture) {
         try {
-            Class<?> material = getNMSClass("org.bukkit.Material");
-            Material skullMaterial = (Material) material.getMethod("getMaterial", String.class).invoke(null, "PLAYER_HEAD");
+            Material skullMaterial = BukkitUtils.returnOneOf("SKULL", "PLAYER_HEAD");
+            assert skullMaterial != null;
             ItemStack hardStack = new ItemStack(skullMaterial);
-            SkullMeta skullMeta = (SkullMeta) hardStack.getItemMeta();
-            assert skullMeta != null;
-            Field skullProfile = skullMeta.getClass().getDeclaredField("profile");
-            skullProfile.setAccessible(true);
-            GameProfile gameProfileObject = new GameProfile(UUID.randomUUID(), "");
-            gameProfileObject.getProperties().put("textures", new Property("textures", texture));
-            skullProfile.set(skullMeta, gameProfileObject);
+            ItemMeta skullMeta = hardStack.getItemMeta();
+            Field fieldProfile = skullMeta.getClass().getDeclaredField("profile"); fieldProfile.setAccessible(true);
+            GameProfile gameProfileObject = new GameProfile(UUID.randomUUID(), "skull" + System.nanoTime());
+            Property textureProperty = new Property("textures", texture);
+            PropertyMap map = gameProfileObject.getProperties();
+            map.put("textures", textureProperty);
+            fieldProfile.set(skullMeta, gameProfileObject);
             hardStack.setItemMeta(skullMeta);
             return hardStack;
         } catch(Exception err) { err.printStackTrace(); }

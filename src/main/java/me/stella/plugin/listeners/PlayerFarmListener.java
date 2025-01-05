@@ -2,6 +2,7 @@ package me.stella.plugin.listeners;
 
 import me.stella.HyperFarming;
 import me.stella.HyperVariables;
+import me.stella.events.CropCollectEvent;
 import me.stella.nms.MultiVerItems;
 import me.stella.nms.NMSProtocol;
 import me.stella.objects.CropsWrapper;
@@ -149,6 +150,10 @@ public class PlayerFarmListener implements Listener {
             handleFarmQuest(cloneEvent);
             handleAuraSkillXp(cloneEvent);
             handleAscensionItemXp(cloneEvent);
+            CropCollectEvent cropCollectEvent = new CropCollectEvent(player, block);
+            BukkitUtils.callEvent(cropCollectEvent);
+            if(cropCollectEvent.isCancelled())
+                return;
             List<Block> toBreak = new ArrayList<>();
             if(blockType.name().equals("CACTUS") || blockType.name().contains("SUGAR_CANE")) {
                 Location blockLoc = block.getLocation().clone();

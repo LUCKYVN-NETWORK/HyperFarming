@@ -114,8 +114,8 @@ public class v1_12_R1 implements NMSProtocol {
     @Override
     public ItemStack buildSkull(String texture) {
         try {
-            Class<?> material = getNMSClass("org.bukkit.Material");
-            Material skullMaterial = (Material) material.getMethod("getMaterial", String.class).invoke(null, "PLAYER_HEAD");
+            Material skullMaterial = BukkitUtils.returnOneOf("SKULL", "PLAYER_HEAD");
+            assert skullMaterial != null;
             ItemStack hardStack = new ItemStack(skullMaterial);
             SkullMeta skullMeta = (SkullMeta) hardStack.getItemMeta();
             Field skullProfile = skullMeta.getClass().getDeclaredField("profile"); skullProfile.setAccessible(true);
