@@ -1,4 +1,4 @@
-package me.stella.objects;
+package me.stella.utility.objects;
 
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;

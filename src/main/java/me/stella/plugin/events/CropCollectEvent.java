@@ -1,4 +1,4 @@
-package me.stella.events;
+package me.stella.plugin.events;
 
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;

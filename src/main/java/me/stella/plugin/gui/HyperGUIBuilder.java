@@ -1,15 +1,15 @@
-package me.stella.gui;
+package me.stella.plugin.gui;
 
 import de.rapha149.signgui.SignGUI;
 import de.rapha149.signgui.SignGUIBuilder;
 import me.stella.HyperFarming;
 import me.stella.HyperVariables;
-import me.stella.functions.FunctionSell;
-import me.stella.functions.FunctionSmartDeposit;
-import me.stella.functions.FunctionTake;
-import me.stella.nms.NMSProtocol;
-import me.stella.objects.ClickWrapper;
-import me.stella.objects.PricedCrop;
+import me.stella.utility.functions.FunctionSell;
+import me.stella.utility.functions.FunctionSmartDeposit;
+import me.stella.utility.functions.FunctionTake;
+import me.stella.support.nms.NMSProtocol;
+import me.stella.utility.objects.ClickWrapper;
+import me.stella.utility.objects.PricedCrop;
 import me.stella.plugin.HyperSettings;
 import me.stella.plugin.data.FarmerData;
 import me.stella.plugin.listeners.PlayerFarmListener;
@@ -27,13 +27,16 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.geysermc.cumulus.form.CustomForm;
+import org.geysermc.floodgate.api.FloodgateApi;
+import org.geysermc.floodgate.api.player.FloodgatePlayer;
 
 import java.io.File;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
-import java.util.logging.Level;
 import java.util.stream.Collectors;
 
 public class HyperGUIBuilder {
@@ -226,57 +229,103 @@ public class HyperGUIBuilder {
                                 .replace("{type}", config.getTypeName(data))));
                         break;
                     }
-                    List<String> signLayoutTake = config.getSignLayout("take")
-                            .stream().map(line -> BukkitUtils.color(line.replace("{type}", config.getTypeName(data))))
-                            .collect(Collectors.toList());
-                    if(signLayoutTake.size() < 4) {
-                        for(int i = 0; i < 4 - signLayoutTake.size(); i++)
-                            signLayoutTake.add("");
-                    }
-                    player.closeInventory();
-                    SignGUIBuilder builderTake = SignGUI.builder();
-                    for(int i = 0; i < 4; i++)
-                        builderTake.setLine(i, signLayoutTake.get(i));
-                    builderTake.setHandler((p, r) -> {
-                        (new BukkitRunnable() {
-                            @Override
-                            public void run() {
-                                HyperSettings config = HyperVariables.get(HyperSettings.class);
-                                String inputLine = r.getLineWithoutColor(0);
-                                if(inputLine.isEmpty())
-                                    return;
-                                String[] response = FunctionTake.take(p, new String[]{data, inputLine });
-                                if(response[0].equals("fail")) {
-                                    p.sendMessage(BukkitUtils.color(config.getMessage("invalid_int").replace("%input%", response[2])));
-                                } else {
-                                    int amount = Integer.parseInt(response[2]);
-                                    if(BukkitUtils.melonCompression.contains(player.getUniqueId()) && response[1].equals("MELON")) {
-                                        ItemStack melonBlock = new ItemStack(BukkitUtils.returnOneOf("MELON_BLOCK", "MELON")).clone();
-                                        int amountBlock = amount / 9; int spare = amount % 9;
-                                        for(ItemStack blockStack: BukkitUtils.buildItemStream(melonBlock, amountBlock))
-                                            player.getInventory().addItem(blockStack);
-                                        player.getInventory().addItem(new ItemStack(Material.MELON, spare));
-                                        player.sendMessage(BukkitUtils.color(config.getMessage("take")
-                                                .replace("{amount}", BukkitUtils.formatter.format(amount))
-                                                .replace("{type}", config.getTypeName(response[1]))));
-                                        if(response[1].equals("MELON"))
-                                            player.sendMessage(BukkitUtils.color(config.getMessage("melon-reminder-on")));
+                    if(FloodgateApi.getInstance().isFloodgatePlayer(player.getUniqueId())) {
+                        FloodgatePlayer floodgatePlayer = FloodgateApi.getInstance().getPlayer(player.getUniqueId());
+                        CustomForm form = CustomForm.builder().title("")
+                                .input(config.getInputTitle("fail").replace("{type}", config.getTypeName(data)), "123")
+                                .validResultHandler(response -> {
+                                    if(!response.hasNext())
+                                        return;
+                                    final String inputLine = String.valueOf(Objects.requireNonNull(response.next()));
+                                    (new BukkitRunnable() {
+                                        @Override
+                                        public void run() {
+                                            if(inputLine.isEmpty())
+                                                return;
+                                            String[] response = FunctionTake.take(player, new String[]{data, inputLine });
+                                            if(response[0].equals("fail")) {
+                                                player.sendMessage(BukkitUtils.color(config.getMessage("invalid_int").replace("%input%", response[2])));
+                                            } else {
+                                                int amount = Integer.parseInt(response[2]);
+                                                if(BukkitUtils.melonCompression.contains(player.getUniqueId()) && response[1].equals("MELON")) {
+                                                    ItemStack melonBlock = new ItemStack(BukkitUtils.returnOneOf("MELON_BLOCK", "MELON")).clone();
+                                                    int amountBlock = amount / 9; int spare = amount % 9;
+                                                    for(ItemStack blockStack: BukkitUtils.buildItemStream(melonBlock, amountBlock))
+                                                        player.getInventory().addItem(blockStack);
+                                                    player.getInventory().addItem(new ItemStack(Material.MELON, spare));
+                                                    player.sendMessage(BukkitUtils.color(config.getMessage("take")
+                                                            .replace("{amount}", BukkitUtils.formatter.format(amount))
+                                                            .replace("{type}", config.getTypeName(response[1]))));
+                                                    if(response[1].equals("MELON"))
+                                                        player.sendMessage(BukkitUtils.color(config.getMessage("melon-reminder-on")));
+                                                } else {
+                                                    ItemStack typeItem = BukkitUtils.idItemMap.get(response[1]).clone();
+                                                    for (ItemStack itemStack : BukkitUtils.buildItemStream(typeItem, amount))
+                                                        player.getInventory().addItem(itemStack);
+                                                    player.sendMessage(BukkitUtils.color(config.getMessage("take")
+                                                            .replace("{amount}", BukkitUtils.formatter.format(amount))
+                                                            .replace("{type}", config.getTypeName(response[1]))));
+                                                    if(response[1].equals("MELON"))
+                                                        player.sendMessage(BukkitUtils.color(config.getMessage("melon-reminder-off")));
+                                                }
+                                            }
+                                        }
+                                    }).runTask(HyperFarming.inst());
+                                }).build();
+                        floodgatePlayer.sendForm(form);
+                    } else {
+                        List<String> signLayoutTake = config.getSignLayout("take")
+                                .stream().map(line -> BukkitUtils.color(line.replace("{type}", config.getTypeName(data))))
+                                .collect(Collectors.toList());
+                        if(signLayoutTake.size() < 4) {
+                            for(int i = 0; i < 4 - signLayoutTake.size(); i++)
+                                signLayoutTake.add("");
+                        }
+                        player.closeInventory();
+                        SignGUIBuilder builderTake = SignGUI.builder();
+                        for(int i = 0; i < 4; i++)
+                            builderTake.setLine(i, signLayoutTake.get(i));
+                        builderTake.setHandler((p, r) -> {
+                            (new BukkitRunnable() {
+                                @Override
+                                public void run() {
+                                    HyperSettings config = HyperVariables.get(HyperSettings.class);
+                                    String inputLine = r.getLineWithoutColor(0);
+                                    if(inputLine.isEmpty())
+                                        return;
+                                    String[] response = FunctionTake.take(p, new String[]{data, inputLine });
+                                    if(response[0].equals("fail")) {
+                                        p.sendMessage(BukkitUtils.color(config.getMessage("invalid_int").replace("%input%", response[2])));
                                     } else {
-                                        ItemStack typeItem = BukkitUtils.idItemMap.get(response[1]).clone();
-                                        for (ItemStack itemStack : BukkitUtils.buildItemStream(typeItem, amount))
-                                            player.getInventory().addItem(itemStack);
-                                        player.sendMessage(BukkitUtils.color(config.getMessage("take")
-                                                .replace("{amount}", BukkitUtils.formatter.format(amount))
-                                                .replace("{type}", config.getTypeName(response[1]))));
-                                        if(response[1].equals("MELON"))
-                                            player.sendMessage(BukkitUtils.color(config.getMessage("melon-reminder-off")));
+                                        int amount = Integer.parseInt(response[2]);
+                                        if(BukkitUtils.melonCompression.contains(player.getUniqueId()) && response[1].equals("MELON")) {
+                                            ItemStack melonBlock = new ItemStack(BukkitUtils.returnOneOf("MELON_BLOCK", "MELON")).clone();
+                                            int amountBlock = amount / 9; int spare = amount % 9;
+                                            for(ItemStack blockStack: BukkitUtils.buildItemStream(melonBlock, amountBlock))
+                                                player.getInventory().addItem(blockStack);
+                                            player.getInventory().addItem(new ItemStack(Material.MELON, spare));
+                                            player.sendMessage(BukkitUtils.color(config.getMessage("take")
+                                                    .replace("{amount}", BukkitUtils.formatter.format(amount))
+                                                    .replace("{type}", config.getTypeName(response[1]))));
+                                            if(response[1].equals("MELON"))
+                                                player.sendMessage(BukkitUtils.color(config.getMessage("melon-reminder-on")));
+                                        } else {
+                                            ItemStack typeItem = BukkitUtils.idItemMap.get(response[1]).clone();
+                                            for (ItemStack itemStack : BukkitUtils.buildItemStream(typeItem, amount))
+                                                player.getInventory().addItem(itemStack);
+                                            player.sendMessage(BukkitUtils.color(config.getMessage("take")
+                                                    .replace("{amount}", BukkitUtils.formatter.format(amount))
+                                                    .replace("{type}", config.getTypeName(response[1]))));
+                                            if(response[1].equals("MELON"))
+                                                player.sendMessage(BukkitUtils.color(config.getMessage("melon-reminder-off")));
+                                        }
                                     }
                                 }
-                            }
-                        }).runTask(HyperFarming.inst());
-                        return Collections.emptyList();
-                    });
-                    builderTake.build().open(player);
+                            }).runTask(HyperFarming.inst());
+                            return Collections.emptyList();
+                        });
+                        builderTake.build().open(player);
+                    }
                     break;
                 case SHIFT_LEFT:
                     if(internalData.getData(data) == 0) {
@@ -321,44 +370,77 @@ public class HyperGUIBuilder {
                                 .replace("{type}", config.getTypeName(data))));
                         break;
                     }
-                    List<String> signLayoutSell = config.getSignLayout("sell")
-                            .stream().map(line -> BukkitUtils.color(line.replace("{type}", config.getTypeName(data))))
-                            .collect(Collectors.toList());
-                    if(signLayoutSell.size() < 4) {
-                        for(int i = 0; i < 4 - signLayoutSell.size(); i++)
-                            signLayoutSell.add("");
-                    }
-                    player.closeInventory();
-                    SignGUIBuilder builderSell = SignGUI.builder();
-                    for(int i = 0; i < 4; i++)
-                        builderSell.setLine(i, signLayoutSell.get(i));
-                    builderSell.setHandler((p, r) -> {
-                        (new BukkitRunnable() {
-                            @Override
-                            public void run() {
-                                HyperSettings config = HyperVariables.get(HyperSettings.class);
-                                String inputLine = r.getLineWithoutColor(0);
-                                if(inputLine.isEmpty())
-                                    return;
-                                String[] response = FunctionSell.sell(p, new String[]{data, inputLine });
-                                if(response[0].equals("fail")) {
-                                    p.sendMessage(BukkitUtils.color(config.getMessage("invalid_int").replace("%input%", response[2])));
-                                } else {
-                                    EconomyFramework serverEconomy = HyperVariables.get(EconomyFramework.class);
-                                    PricedCrop pricing = BukkitUtils.pricingTable.get(response[1]);
-                                    int amount = Integer.parseInt(response[2]);
-                                    double earned = Math.floor(pricing.getPerValue() * ((double) amount / pricing.getPerCount()));
-                                    serverEconomy.giveMoney(player, (long) earned);
-                                    player.sendMessage(BukkitUtils.color(config.getMessage("sell")
-                                            .replace("{amount}", BukkitUtils.formatter.format(amount))
-                                            .replace("{type}", config.getTypeName(response[1]))
-                                            .replace("{money}", BukkitUtils.formatter.format(earned))));
+                    if(FloodgateApi.getInstance().isFloodgatePlayer(player.getUniqueId())) {
+                        FloodgatePlayer floodgatePlayer = FloodgateApi.getInstance().getPlayer(player.getUniqueId());
+                        CustomForm form = CustomForm.builder().title("")
+                                .input(config.getInputTitle("sell").replace("{type}", config.getTypeName(data)), "123")
+                                .validResultHandler(response -> {
+                                    if(!response.hasNext())
+                                        return;
+                                    final String inputLine = String.valueOf(Objects.requireNonNull(response.next()));
+                                    (new BukkitRunnable() {
+                                        @Override
+                                        public void run() {
+                                            if(inputLine.isEmpty())
+                                                return;
+                                            String[] response = FunctionSell.sell(player, new String[]{data, inputLine });
+                                            if(response[0].equals("fail")) {
+                                                player.sendMessage(BukkitUtils.color(config.getMessage("invalid_int").replace("%input%", response[2])));
+                                            } else {
+                                                EconomyFramework serverEconomy = HyperVariables.get(EconomyFramework.class);
+                                                PricedCrop pricing = BukkitUtils.pricingTable.get(response[1]);
+                                                int amount = Integer.parseInt(response[2]);
+                                                double earned = Math.floor(pricing.getPerValue() * ((double) amount / pricing.getPerCount()));
+                                                serverEconomy.giveMoney(player, (long) earned);
+                                                player.sendMessage(BukkitUtils.color(config.getMessage("sell")
+                                                        .replace("{amount}", BukkitUtils.formatter.format(amount))
+                                                        .replace("{type}", config.getTypeName(response[1]))
+                                                        .replace("{money}", BukkitUtils.formatter.format(earned))));
+                                            }
+                                        }
+                                    }).runTask(HyperFarming.inst());
+                                }).build();
+                        floodgatePlayer.sendForm(form);
+                    } else {
+                        List<String> signLayoutSell = config.getSignLayout("sell")
+                                .stream().map(line -> BukkitUtils.color(line.replace("{type}", config.getTypeName(data))))
+                                .collect(Collectors.toList());
+                        if(signLayoutSell.size() < 4) {
+                            for(int i = 0; i < 4 - signLayoutSell.size(); i++)
+                                signLayoutSell.add("");
+                        }
+                        player.closeInventory();
+                        SignGUIBuilder builderSell = SignGUI.builder();
+                        for(int i = 0; i < 4; i++)
+                            builderSell.setLine(i, signLayoutSell.get(i));
+                        builderSell.setHandler((p, r) -> {
+                            (new BukkitRunnable() {
+                                @Override
+                                public void run() {
+                                    HyperSettings config = HyperVariables.get(HyperSettings.class);
+                                    String inputLine = r.getLineWithoutColor(0);
+                                    if(inputLine.isEmpty())
+                                        return;
+                                    String[] response = FunctionSell.sell(p, new String[]{data, inputLine });
+                                    if(response[0].equals("fail")) {
+                                        p.sendMessage(BukkitUtils.color(config.getMessage("invalid_int").replace("%input%", response[2])));
+                                    } else {
+                                        EconomyFramework serverEconomy = HyperVariables.get(EconomyFramework.class);
+                                        PricedCrop pricing = BukkitUtils.pricingTable.get(response[1]);
+                                        int amount = Integer.parseInt(response[2]);
+                                        double earned = Math.floor(pricing.getPerValue() * ((double) amount / pricing.getPerCount()));
+                                        serverEconomy.giveMoney(player, (long) earned);
+                                        player.sendMessage(BukkitUtils.color(config.getMessage("sell")
+                                                .replace("{amount}", BukkitUtils.formatter.format(amount))
+                                                .replace("{type}", config.getTypeName(response[1]))
+                                                .replace("{money}", BukkitUtils.formatter.format(earned))));
+                                    }
                                 }
-                            }
-                        }).runTask(HyperFarming.inst());
-                        return Collections.emptyList();
-                    });
-                    builderSell.build().open(player);
+                            }).runTask(HyperFarming.inst());
+                            return Collections.emptyList();
+                        });
+                        builderSell.build().open(player);
+                    }
                     break;
                 case SHIFT_RIGHT:
                     if(internalData.getData(data) == 0) {
@@ -410,7 +492,7 @@ public class HyperGUIBuilder {
             ItemMeta buttonMeta = buttonIcon.getItemMeta();
             final List<String> formattedLore = buttonMeta.getLore().stream().map(line -> {
                 synchronized (PlayerFarmListener.activityCache) {
-                    Map<String, AtomicInteger> activityThreadCurrent = PlayerFarmListener.activityCache.get(player);
+                    Map<String, AtomicInteger> activityThreadCurrent = PlayerFarmListener.activityCache.computeIfAbsent(player, p -> new ConcurrentHashMap<>());
                     AtomicInteger backup = new AtomicInteger(0);
                     return line.replace("{update}", BukkitUtils.timeFormatter.format(Calendar.getInstance().getTime()))
                             .replace("{broken}", BukkitUtils.formatter.format(data.getBlocksBroken()))

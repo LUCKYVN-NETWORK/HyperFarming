@@ -1,7 +1,7 @@
 package me.stella.plugin.commands.subcommands;
 
 import me.stella.HyperVariables;
-import me.stella.functions.FunctionDeposit;
+import me.stella.utility.functions.FunctionDeposit;
 import me.stella.plugin.HyperSettings;
 import me.stella.plugin.commands.FarmSubCommand;
 import me.stella.plugin.data.FarmerData;

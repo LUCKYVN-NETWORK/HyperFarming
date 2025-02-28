@@ -1,10 +1,9 @@
-package me.stella.nms.versions;
+package me.stella.support.nms.versions;
 
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
-import me.stella.HyperFarming;
-import me.stella.nms.NMSProtocol;
-import me.stella.objects.LegacyDataWrapper;
+import me.stella.support.nms.NMSProtocol;
+import me.stella.utility.objects.LegacyDataWrapper;
 import me.stella.utility.BukkitUtils;
 import org.bukkit.Material;
 import org.bukkit.World;
@@ -12,7 +11,6 @@ import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
 
 import java.lang.reflect.Field;
@@ -21,7 +19,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
-import java.util.logging.Level;
 
 public class v1_12_R1 implements NMSProtocol {
 

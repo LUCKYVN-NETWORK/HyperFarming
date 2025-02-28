@@ -1,4 +1,4 @@
-package me.stella.functions;
+package me.stella.utility.functions;
 
 import me.stella.HyperFarming;
 import me.stella.plugin.data.FarmerData;

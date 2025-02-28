@@ -1,7 +1,7 @@
 package me.stella.plugin.listeners;
 
 import me.stella.HyperFarming;
-import me.stella.objects.PlayerWrapper;
+import me.stella.utility.objects.PlayerWrapper;
 import me.stella.plugin.data.DataBuilder;
 import me.stella.plugin.data.FarmerData;
 import me.stella.utility.BukkitUtils;
@@ -38,9 +38,7 @@ public class PlayerInOutListener implements Listener {
                     PlayerFarmListener.startActionBarQueue(player);
                     Map<String, AtomicInteger> activity = new HashMap<>();
                     FarmerData.getDataTypes().forEach(e -> activity.put(e, new AtomicInteger(0)));
-                    synchronized (PlayerFarmListener.activityCache) {
-                        PlayerFarmListener.activityCache.put(player, activity);
-                    }
+                    PlayerFarmListener.activityCache.put(player, activity);
                 } catch(Exception err) { err.printStackTrace(); }
             }
         }).runTaskAsynchronously(HyperFarming.inst());
@@ -49,9 +47,7 @@ public class PlayerInOutListener implements Listener {
     @EventHandler(priority = EventPriority.LOWEST)
     public void onQuit(PlayerQuitEvent e) {
         final Player player = e.getPlayer();
-        synchronized (PlayerFarmListener.activityCache) {
-            PlayerFarmListener.activityCache.remove(player);
-        }
+        PlayerFarmListener.activityCache.remove(player);
         BukkitUtils.use.remove(player.getUniqueId());
         PlayerFarmListener.stopActionBarQueue(player);
         final PlayerWrapper playerWrapper = PlayerWrapper.buildWrapper(player);

@@ -1,58 +1,61 @@
-package me.stella.nms.versions;
+package me.stella.support.nms.versions;
 
-import com.mojang.authlib.GameProfile;
-import com.mojang.authlib.properties.Property;
-import me.stella.HyperFarming;
-import me.stella.nms.NMSProtocol;
+import me.stella.support.nms.NMSProtocol;
 import me.stella.utility.BukkitUtils;
+import me.stella.utility.WorldRandomSource;
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
+import org.bukkit.profile.PlayerProfile;
+import org.bukkit.profile.PlayerTextures;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Random;
-import java.util.UUID;
-import java.util.logging.Level;
+import java.net.URL;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
-public class v1_18_R2 implements NMSProtocol {
+public class v1_20_R3 implements NMSProtocol {
 
     private final Class<?> baseNMSWorld;
     private final Class<?> generatorAccess;
     private final Class<?> blockPosition;
     private final Class<?> iBlockData;
     private final Class<?> nmsItemStack;
-    private final Class<?> nmsPlayer;
     private final Class<?> nbtTagCompound;
     private final Class<?> materialBukkit;
     private final Class<?> craftBlockData;
     private final Class<?> craftItemStack;
+    private final Class<?> randomSource;
     private final Method setType;
     private final Method getData;
     private final Method getNMS;
     private final Field blockGeneratorAccess;
     private final Field blockPos;
     private final Map<String, Object> blockDataBank;
+    private final Class<?> craftWorld;
 
-    public v1_18_R2() throws Exception {
+    private final static Map<World, Random> worldRandom = new ConcurrentHashMap<>();
+
+    public v1_20_R3() throws Exception {
         this.baseNMSWorld = getNMSClass("net.minecraft.world.level.World");
         this.generatorAccess = getNMSClass("net.minecraft.world.level.GeneratorAccess");
         this.blockPosition = getNMSClass("net.minecraft.core.BlockPosition");
         this.iBlockData = getNMSClass("net.minecraft.world.level.block.state.IBlockData");
         this.nbtTagCompound = getNMSClass("net.minecraft.nbt.NBTTagCompound");
         this.nmsItemStack = getNMSClass("net.minecraft.world.item.ItemStack");
-        this.nmsPlayer = getNMSClass("net.minecraft.server.level.EntityPlayer");
-        this.craftBlockData = getNMSClass("org.bukkit.craftbukkit.v1_18_R2.block.data.CraftBlockData");
+        //Class<?> nmsPlayer = getNMSClass("net.minecraft.server.level.EntityPlayer");
+        this.randomSource = getNMSClass("net.minecraft.util.RandomSource");
+        this.craftBlockData = getNMSClass("org.bukkit.craftbukkit.v1_20_R3.block.data.CraftBlockData");
         this.materialBukkit = getNMSClass("org.bukkit.Material");
-        this.craftItemStack = getNMSClass("org.bukkit.craftbukkit.v1_18_R2.inventory.CraftItemStack");
-        Class<?> craftBukkitBlock = getNMSClass("org.bukkit.craftbukkit.v1_18_R2.block.CraftBlock");
+        this.craftItemStack = getNMSClass("org.bukkit.craftbukkit.v1_20_R3.inventory.CraftItemStack");
+        this.craftWorld = getNMSClass("org.bukkit.craftbukkit.v1_20_R3.CraftWorld");
+        Class<?> craftBukkitBlock = getNMSClass("org.bukkit.craftbukkit.v1_20_R3.block.CraftBlock");
         this.setType = craftBukkitBlock.getMethod("setTypeAndData", this.generatorAccess, this.blockPosition, this.iBlockData, this.iBlockData, boolean.class);
         this.getData = craftBukkitBlock.getMethod("getData");
         this.getNMS = craftBukkitBlock.getMethod("getNMS");
@@ -80,8 +83,7 @@ public class v1_18_R2 implements NMSProtocol {
     @Override
     public Random getWorldRandom(World world) {
         try {
-            Object handle = world.getClass().getMethod("getHandle").invoke(world);
-            return (Random) baseNMSWorld.getField("v").get(handle);
+            return worldRandom.computeIfAbsent(world, w -> new WorldRandomSource());
         } catch(Throwable err) { err.printStackTrace(); }
         return null;
     }
@@ -116,29 +118,47 @@ public class v1_18_R2 implements NMSProtocol {
         try {
             Field handleField = this.craftItemStack.getDeclaredField("handle");
             handleField.setAccessible(true);
+            Object world = this.craftWorld.getMethod("getHandle").invoke(player.getWorld());
             Object handle = handleField.get(stack);
-            this.nmsItemStack.getMethod("a", int.class, Random.class, this.nmsPlayer)
-                    .invoke(handle, 1, getWorldRandom(player.getWorld()), player.getClass().getMethod("getHandle").invoke(player));
+            this.nmsItemStack.getMethod("hurt", int.class, this.randomSource, getNMSClass("net.minecraft.world.entity.EntityLiving"))
+                    .invoke(handle, 1, this.baseNMSWorld.getField("z").get(world), player.getClass().getMethod("getHandle").invoke(player));
         } catch(Exception err) { err.printStackTrace(); }
     }
 
     @Override
     public ItemStack buildSkull(String texture) {
+        URL url;
         try {
-            Material skullMaterial = BukkitUtils.returnOneOf("SKULL", "PLAYER_HEAD");
-            assert skullMaterial != null;
-            ItemStack hardStack = new ItemStack(skullMaterial);
-            SkullMeta skullMeta = (SkullMeta) hardStack.getItemMeta();
-            Field skullProfile = skullMeta.getClass().getDeclaredField("profile"); skullProfile.setAccessible(true);
-            GameProfile gameProfileObject = (GameProfile) skullProfile.get(skullMeta);
-            if(gameProfileObject == null)
-                gameProfileObject = new GameProfile(UUID.randomUUID(), "skull_" + System.currentTimeMillis());
-            gameProfileObject.getProperties().put("textures", new Property("textures", texture));
-            skullProfile.set(skullMeta, gameProfileObject);
-            hardStack.setItemMeta(skullMeta);
-            return hardStack;
-        } catch(Exception err) { err.printStackTrace(); }
-        return null;
+            url = getUrlFromBase64(texture);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        PlayerProfile profile = getProfile(url.toString());
+        ItemStack head = new ItemStack(Material.PLAYER_HEAD);
+        SkullMeta meta = (SkullMeta) head.getItemMeta();
+        meta.setOwnerProfile(profile);
+        head.setItemMeta(meta);
+        return head;
+    }
+
+    private URL getUrlFromBase64(String base64) throws Exception {
+        String decoded = new String(Base64.getDecoder().decode(base64));
+        return new URL(decoded.substring("{\"textures\":{\"SKIN\":{\"url\":\"".length(), decoded.length() - "\"}}}".length()));
+    }
+
+    private final UUID RANDOM_UUID = UUID.fromString("92864445-51c5-4c3b-9039-517c9927d1b4");
+    private PlayerProfile getProfile(String url) {
+        PlayerProfile profile = Bukkit.createPlayerProfile(RANDOM_UUID);
+        PlayerTextures textures = profile.getTextures();
+        URL urlObject;
+        try {
+            urlObject = new URL(url);
+        } catch (Exception exception) {
+            throw new RuntimeException("Invalid URL", exception);
+        }
+        textures.setSkin(urlObject);
+        profile.setTextures(textures);
+        return profile;
     }
 
     @Override
@@ -150,8 +170,8 @@ public class v1_18_R2 implements NMSProtocol {
         try {
             Object itemStackHandler = craftItemStack.getMethod("asNMSCopy", ItemStack.class).invoke(null, stack);
             Class<?> itemStackNMSClass = itemStackHandler.getClass();
-            Object nbtTag = (boolean) itemStackNMSClass.getMethod("s").invoke(itemStackHandler) ?
-                    itemStackNMSClass.getMethod("t").invoke(itemStackHandler) :
+            Object nbtTag = (boolean) itemStackNMSClass.getMethod("u").invoke(itemStackHandler) ?
+                    itemStackNMSClass.getMethod("v").invoke(itemStackHandler) :
                     nbtTagCompound.getConstructors()[0].newInstance();
             //HyperFarming.console.log(Level.INFO, "Enchant invoked! " + key + ":" + level);
             if(level >= 1)
@@ -173,8 +193,8 @@ public class v1_18_R2 implements NMSProtocol {
         try {
             Object itemStackHandler = craftItemStack.getMethod("asNMSCopy", ItemStack.class).invoke(null, stack);
             Class<?> itemStackNMSClass = itemStackHandler.getClass();
-            Object nbtTag = (boolean) itemStackNMSClass.getMethod("s").invoke(itemStackHandler) ?
-                    itemStackNMSClass.getMethod("t").invoke(itemStackHandler) :
+            Object nbtTag = (boolean) itemStackNMSClass.getMethod("u").invoke(itemStackHandler) ?
+                    itemStackNMSClass.getMethod("v").invoke(itemStackHandler) :
                     nbtTagCompound.getConstructors()[0].newInstance();
             return Integer.parseInt(String.valueOf(nbtTagCompound.getMethod("h", String.class).invoke(nbtTag, key)));
         } catch(Exception err) { err.printStackTrace(); }
@@ -190,8 +210,8 @@ public class v1_18_R2 implements NMSProtocol {
         try {
             Object itemStackHandler = craftItemStack.getMethod("asNMSCopy", ItemStack.class).invoke(null, stack);
             Class<?> itemStackNMSClass = itemStackHandler.getClass();
-            Object nbtTag = (boolean) itemStackNMSClass.getMethod("s").invoke(itemStackHandler) ?
-                    itemStackNMSClass.getMethod("t").invoke(itemStackHandler) :
+            Object nbtTag = (boolean) itemStackNMSClass.getMethod("u").invoke(itemStackHandler) ?
+                    itemStackNMSClass.getMethod("v").invoke(itemStackHandler) :
                     nbtTagCompound.getConstructors()[0].newInstance();
             return (boolean) nbtTagCompound.getMethod("e", String.class).invoke(nbtTag, key);
         } catch(Exception err) { err.printStackTrace(); }
@@ -205,8 +225,8 @@ public class v1_18_R2 implements NMSProtocol {
         try {
             Object itemStackHandler = craftItemStack.getMethod("asNMSCopy", ItemStack.class).invoke(null, icon);
             Class<?> itemStackNMSClass = itemStackHandler.getClass();
-            Object nbtTag = (boolean) itemStackNMSClass.getMethod("s").invoke(itemStackHandler) ?
-                    itemStackNMSClass.getMethod("t").invoke(itemStackHandler) :
+            Object nbtTag = (boolean) itemStackNMSClass.getMethod("u").invoke(itemStackHandler) ?
+                    itemStackNMSClass.getMethod("v").invoke(itemStackHandler) :
                     nbtTagCompound.getConstructors()[0].newInstance();
             nbtTagCompound.getMethod("a", String.class, String.class).invoke(nbtTag, key, data);
             itemStackNMSClass.getMethod("c", nbtTagCompound).invoke(itemStackHandler, nbtTag);
@@ -222,8 +242,8 @@ public class v1_18_R2 implements NMSProtocol {
         try {
             Object itemStackHandler = craftItemStack.getMethod("asNMSCopy", ItemStack.class).invoke(null, icon);
             Class<?> itemStackNMSClass = itemStackHandler.getClass();
-            Object nbtTag = (boolean) itemStackNMSClass.getMethod("s").invoke(itemStackHandler) ?
-                    itemStackNMSClass.getMethod("t").invoke(itemStackHandler) :
+            Object nbtTag = (boolean) itemStackNMSClass.getMethod("u").invoke(itemStackHandler) ?
+                    itemStackNMSClass.getMethod("v").invoke(itemStackHandler) :
                     nbtTagCompound.getConstructors()[0].newInstance();
             return String.valueOf(nbtTagCompound.getMethod("l", String.class).invoke(nbtTag, key));
         } catch(Exception err) { err.printStackTrace(); }

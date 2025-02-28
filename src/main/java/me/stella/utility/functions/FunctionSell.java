@@ -1,7 +1,7 @@
-package me.stella.functions;
+package me.stella.utility.functions;
 
 import me.stella.HyperFarming;
-import me.stella.objects.PricedCrop;
+import me.stella.utility.objects.PricedCrop;
 import me.stella.plugin.data.FarmerData;
 import me.stella.utility.BukkitUtils;
 import org.bukkit.entity.Player;

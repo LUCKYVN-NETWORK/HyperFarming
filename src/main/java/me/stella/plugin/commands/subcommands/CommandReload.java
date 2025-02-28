@@ -2,7 +2,7 @@ package me.stella.plugin.commands.subcommands;
 
 import me.stella.HyperFarming;
 import me.stella.HyperVariables;
-import me.stella.gui.HyperGUIBuilder;
+import me.stella.plugin.gui.HyperGUIBuilder;
 import me.stella.plugin.HyperSettings;
 import me.stella.plugin.commands.FarmSubCommand;
 import me.stella.utility.BukkitUtils;

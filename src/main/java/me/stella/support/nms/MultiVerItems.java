@@ -1,4 +1,4 @@
-package me.stella.nms;
+package me.stella.support.nms;
 
 import me.stella.HyperFarming;
 import org.bukkit.Material;

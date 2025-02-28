@@ -1,9 +1,9 @@
-package me.stella.gui;
+package me.stella.plugin.gui;
 
 import me.stella.HyperFarming;
 import me.stella.HyperVariables;
-import me.stella.nms.NMSProtocol;
-import me.stella.objects.ClickWrapper;
+import me.stella.support.nms.NMSProtocol;
+import me.stella.utility.objects.ClickWrapper;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -18,10 +18,10 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class HyperGUIHandle implements InventoryHolder, Listener {
 
@@ -31,7 +31,7 @@ public class HyperGUIHandle implements InventoryHolder, Listener {
 
     public HyperGUIHandle(HyperGUIBuilder builder) {
         this.builder = builder;
-        this.updateTasks = Collections.synchronizedMap(new HashMap<>());
+        this.updateTasks = new ConcurrentHashMap<>();
     }
 
     public HyperGUIBuilder getInternalBuilder() {
@@ -98,9 +98,7 @@ public class HyperGUIHandle implements InventoryHolder, Listener {
                     tasks.put(button, taskUpdate);
                 });
         if(!tasks.isEmpty())
-          synchronized (updateTasks) {
-              updateTasks.put(player, tasks);
-          }
+            updateTasks.put(player, tasks);
     }
 
     @EventHandler(priority = EventPriority.LOWEST)
@@ -112,25 +110,21 @@ public class HyperGUIHandle implements InventoryHolder, Listener {
         (new BukkitRunnable() {
             @Override
             public void run() {
-                synchronized (updateTasks) {
-                    Map<HyperGUIButton, BukkitTask> tasks = updateTasks.getOrDefault(player, new HashMap<>());
-                    tasks.forEach((button, task) -> {
-                        button.handleShow(player);
-                        task.cancel();
-                    });
-                    updateTasks.remove(player);
-                }
+                Map<HyperGUIButton, BukkitTask> tasks = updateTasks.getOrDefault(player, new HashMap<>());
+                tasks.forEach((button, task) -> {
+                    button.handleShow(player);
+                    task.cancel();
+                });
+                updateTasks.remove(player);
             }
         }).runTaskAsynchronously(HyperFarming.inst());
     }
 
     @EventHandler(priority = EventPriority.LOWEST)
     public void quit(PlayerQuitEvent event) {
-        synchronized (updateTasks) {
-            Map<HyperGUIButton, BukkitTask> activeUpdates = updateTasks.getOrDefault(event.getPlayer(), new HashMap<>());
-            activeUpdates.values().forEach(BukkitTask::cancel);
-            updateTasks.remove(event.getPlayer());
-        }
+        Map<HyperGUIButton, BukkitTask> activeUpdates = updateTasks.getOrDefault(event.getPlayer(), new HashMap<>());
+        activeUpdates.values().forEach(BukkitTask::cancel);
+        updateTasks.remove(event.getPlayer());
         builder.removeInventoryCache(event.getPlayer());
     }
 }

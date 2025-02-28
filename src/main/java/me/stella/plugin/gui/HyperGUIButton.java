@@ -1,8 +1,7 @@
-package me.stella.gui;
+package me.stella.plugin.gui;
 
-import me.stella.objects.ClickWrapper;
+import me.stella.utility.objects.ClickWrapper;
 import org.bukkit.entity.Player;
-import org.bukkit.event.inventory.ClickType;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 

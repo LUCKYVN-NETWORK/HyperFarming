@@ -1,7 +1,6 @@
 package me.stella.plugin;
 
-import me.stella.objects.PricedCrop;
-import me.stella.plugin.data.FarmerData;
+import me.stella.utility.objects.PricedCrop;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -63,6 +62,10 @@ public class HyperSettings {
 
     public int getDefaultLimit() {
         return this.config.getInt("engine.default-limit");
+    }
+
+    public String getInputTitle(String action) {
+        return this.config.getString("forms." + action, "Crush_Seul write a title you lil bitch");
     }
 
     public boolean onlyBreakableInSuperiorSkyblockIsland() {

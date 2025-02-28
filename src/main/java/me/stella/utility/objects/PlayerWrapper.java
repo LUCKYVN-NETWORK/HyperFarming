@@ -1,4 +1,4 @@
-package me.stella.objects;
+package me.stella.utility.objects;
 
 import me.stella.plugin.data.FarmerData;
 import org.bukkit.entity.Player;

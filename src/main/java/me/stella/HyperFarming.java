@@ -1,10 +1,10 @@
 package me.stella;
 
-import me.stella.gui.HyperGUIBuilder;
-import me.stella.gui.HyperGUIHandle;
-import me.stella.nms.MultiVerItems;
-import me.stella.nms.NMSProtocol;
-import me.stella.objects.PlayerWrapper;
+import me.stella.plugin.gui.HyperGUIBuilder;
+import me.stella.plugin.gui.HyperGUIHandle;
+import me.stella.support.nms.MultiVerItems;
+import me.stella.support.nms.NMSProtocol;
+import me.stella.utility.objects.PlayerWrapper;
 import me.stella.plugin.IOWorker;
 import me.stella.plugin.HyperSettings;
 import me.stella.plugin.commands.FarmCommand;

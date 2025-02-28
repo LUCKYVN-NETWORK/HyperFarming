@@ -1,9 +1,7 @@
 package me.stella.plugin.commands.subcommands;
 
-import me.stella.HyperFarming;
 import me.stella.HyperVariables;
-import me.stella.functions.FunctionSell;
-import me.stella.functions.FunctionTake;
+import me.stella.utility.functions.FunctionTake;
 import me.stella.plugin.HyperSettings;
 import me.stella.plugin.commands.FarmSubCommand;
 import me.stella.plugin.data.FarmerData;
@@ -14,7 +12,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.*;
-import java.util.logging.Level;
 import java.util.stream.Collectors;
 
 public class CommandTake implements FarmSubCommand {

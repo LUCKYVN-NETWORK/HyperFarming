@@ -2,7 +2,7 @@ package me.stella.plugin.data;
 
 import me.stella.HyperFarming;
 import me.stella.HyperVariables;
-import me.stella.objects.PlayerWrapper;
+import me.stella.utility.objects.PlayerWrapper;
 import me.stella.plugin.HyperSettings;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;

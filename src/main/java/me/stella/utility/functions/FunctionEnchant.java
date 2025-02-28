@@ -1,13 +1,11 @@
-package me.stella.functions;
+package me.stella.utility.functions;
 
-import me.stella.HyperFarming;
 import me.stella.HyperVariables;
-import me.stella.nms.NMSProtocol;
+import me.stella.support.nms.NMSProtocol;
 import me.stella.plugin.data.FarmerData;
 import me.stella.utility.BukkitUtils;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.Arrays;
 import java.util.List;

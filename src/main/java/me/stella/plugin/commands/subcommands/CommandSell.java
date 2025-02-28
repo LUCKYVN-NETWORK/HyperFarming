@@ -1,14 +1,13 @@
 package me.stella.plugin.commands.subcommands;
 
 import me.stella.HyperVariables;
-import me.stella.functions.FunctionSell;
-import me.stella.objects.PricedCrop;
+import me.stella.utility.functions.FunctionSell;
+import me.stella.utility.objects.PricedCrop;
 import me.stella.plugin.HyperSettings;
 import me.stella.plugin.commands.FarmSubCommand;
 import me.stella.plugin.data.FarmerData;
 import me.stella.support.EconomyFramework;
 import me.stella.utility.BukkitUtils;
-import net.milkbowl.vault.economy.Economy;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 

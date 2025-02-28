@@ -106,6 +106,10 @@ sign:
     - '-----------------'
     - '&0Hãy nhập số &a{type}'
     - '&0bạn muốn bán đi'
+# Form layout for input GUIs (Bedrock support)
+forms:
+  take: "Nhập số {type} muốn rút"
+  sell: "Nhập số {type} muốn bán"
 message:
   # Bulk display for the /farm help command
   help:

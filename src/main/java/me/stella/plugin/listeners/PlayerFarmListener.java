@@ -2,10 +2,10 @@ package me.stella.plugin.listeners;
 
 import me.stella.HyperFarming;
 import me.stella.HyperVariables;
-import me.stella.events.CropCollectEvent;
-import me.stella.nms.MultiVerItems;
-import me.stella.nms.NMSProtocol;
-import me.stella.objects.CropsWrapper;
+import me.stella.plugin.events.CropCollectEvent;
+import me.stella.support.nms.MultiVerItems;
+import me.stella.support.nms.NMSProtocol;
+import me.stella.utility.objects.CropsWrapper;
 import me.stella.plugin.HyperSettings;
 import me.stella.plugin.data.FarmerData;
 import me.stella.support.SupportedPlugin;
@@ -26,43 +26,38 @@ import org.bukkit.scheduler.BukkitTask;
 
 import java.lang.reflect.Method;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class PlayerFarmListener implements Listener {
-    private final Map<String, CropsWrapper> storable;
-    private final Map<String, Integer> maxGrowth;
-    private final Map<String, Material> seededTypes;
+
     private static final Map<Player, BukkitTask> actionBarTasks = new HashMap<>();
-    private static final Map<Player, Map<String, AtomicInteger>> cache = Collections.synchronizedMap(new HashMap<>());
-    public static final Map<Player, Map<String, AtomicInteger>> activityCache = Collections.synchronizedMap(new HashMap<>());
+    private static final Map<Player, Map<String, AtomicInteger>> cache = new ConcurrentHashMap<>();
+    public static final Map<Player, Map<String, AtomicInteger>> activityCache = new ConcurrentHashMap<>();
 
     public static void startActionBarQueue(final Player player) {
         final HyperSettings config = HyperVariables.get(HyperSettings.class);
         actionBarTasks.put(player, (new BukkitRunnable() {
             @Override
             public void run() {
-                synchronized (cache) {
-                    try {
-                        if(!cache.containsKey(player))
-                            cache.put(player, new HashMap<>());
-                        //HyperFarming.console.log(Level.INFO, cache.toString());
-                        Map<String, AtomicInteger> playerCache = cache.get(player);
-                        Set<String> reset = new HashSet<>();
-                        playerCache.forEach((type, amount) -> {
-                            if(amount.get() > 0) {
-                                reset.add(type);
-                                BukkitUtils.sendActionBarAsync(player, BukkitUtils.color(config.getMessage("action-bar-add")
-                                        .replace("{amount}", BukkitUtils.formatter.format(amount))
-                                        .replace("{type}", config.getTypeName(type))));
-                                // HyperFarming.console.log(Level.INFO, "Cache flush -> " + type + " -> " + amount);
-                            }
-                        });
-                        if(!reset.isEmpty())
-                            player.playSound(player.getEyeLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1.0f, 1.0f);
-                        reset.forEach(e -> playerCache.get(e).set(0));
-                    } catch(Exception err) { this.cancel(); }
-                }
+                try {
+                    //HyperFarming.console.log(Level.INFO, cache.toString());
+                    Map<String, AtomicInteger> playerCache = cache.computeIfAbsent(player, p -> new ConcurrentHashMap<>());
+                    Set<String> reset = new HashSet<>();
+                    playerCache.forEach((type, amount) -> {
+                        if(amount.get() > 0) {
+                            reset.add(type);
+                            BukkitUtils.sendActionBarAsync(player, BukkitUtils.color(config.getMessage("action-bar-add")
+                                    .replace("{amount}", BukkitUtils.formatter.format(amount))
+                                    .replace("{type}", config.getTypeName(type))));
+                            // HyperFarming.console.log(Level.INFO, "Cache flush -> " + type + " -> " + amount);
+                        }
+                    });
+                    if(!reset.isEmpty())
+                        player.playSound(player.getEyeLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1.0f, 1.0f);
+                    reset.forEach(e -> playerCache.get(e).set(0));
+                } catch(Exception err) { this.cancel(); }
             }
         }).runTaskTimerAsynchronously(HyperFarming.inst(), 0L, 20L));
     }
@@ -74,10 +69,14 @@ public class PlayerFarmListener implements Listener {
         cache.remove(player);
     }
 
+    private final Map<String, CropsWrapper> storable;
+    private final Map<String, Integer> maxGrowth;
+    private final Map<String, Material> seededTypes;
+
     public PlayerFarmListener() {
         this.storable = new HashMap<>();
         this.storable.put("CROPS", CropsWrapper.build("WHEAT", new ItemStack(Material.WHEAT)));
-        this.storable.put("wheat", CropsWrapper.build("WHEAT", new ItemStack(Material.WHEAT)));
+        this.storable.put("WHEAT", CropsWrapper.build("WHEAT", new ItemStack(Material.WHEAT)));
         this.storable.put("POTATO", CropsWrapper.build("POTATO", new ItemStack(Objects.requireNonNull(BukkitUtils.returnOneOf("POTATO_ITEM", "POTATO")))));
         this.storable.put("POTATOES", CropsWrapper.build("POTATO", new ItemStack(Objects.requireNonNull(BukkitUtils.returnOneOf("POTATO_ITEM", "POTATO")))));
         this.storable.put("CARROT", CropsWrapper.build("CARROT", new ItemStack(Objects.requireNonNull(BukkitUtils.returnOneOf("CARROT_ITEM", "CARROT")))));
@@ -185,10 +184,6 @@ public class PlayerFarmListener implements Listener {
             (new BukkitRunnable() {
                 @Override
                 public void run() {
-                    if(!(cache.containsKey(player)))
-                        synchronized (cache) {
-                            cache.put(player, new HashMap<>());
-                        }
                     int bonusRequired = BukkitUtils.getRoundedInt(maxGrowth.get(blockType.name()), config.getRequiredGrowthForBonus());
                     int baseDrop = 0;
                     int fortune = tool ? breakStack.getEnchantmentLevel(Enchantment.LOOT_BONUS_BLOCKS) : 0;
@@ -231,7 +226,7 @@ public class PlayerFarmListener implements Listener {
                             @Override
                             public void run() {
                                 ItemStack seedStack = new ItemStack(seededTypes.get(wrapper.getDataID()), finalSeedDrops);
-                                blockWorld.dropItemNaturally(player.getEyeLocation(), seedStack.clone());
+                                player.getInventory().addItem(seedStack.clone());
                             }
                         }).runTask(HyperFarming.inst());
                     }
@@ -239,15 +234,10 @@ public class PlayerFarmListener implements Listener {
                         int spare = farmerData.increase(wrapper.getDataID(), baseDrop);
                         int amountAdded = baseDrop - spare;
                         //HyperFarming.console.log(Level.INFO, "Break added -> " + amountAdded);
-                        synchronized (cache) {
-                            Map<String, AtomicInteger> playerCache = cache.get(player);
-                            if(!playerCache.containsKey(wrapper.getDataID()))
-                                playerCache.put(wrapper.getDataID(), new AtomicInteger(0));
-                            playerCache.get(wrapper.getDataID()).addAndGet(amountAdded);
-                        }
-                        synchronized (activityCache) {
-                            activityCache.get(player).get(wrapper.getDataID()).addAndGet(amountAdded);
-                        }
+                        cache.computeIfAbsent(player, p -> new ConcurrentHashMap<>())
+                                .computeIfAbsent(wrapper.getDataID(), w -> new AtomicInteger(0)).addAndGet(amountAdded);
+                        activityCache.computeIfAbsent(player, p -> new ConcurrentHashMap<>())
+                                .computeIfAbsent(wrapper.getDataID(), w -> new AtomicInteger(0)).addAndGet(amountAdded);
                         if(spare > 0) {
                             List<ItemStack> droppedStream = BukkitUtils.buildItemStream(wrapper.getDropStack(), spare);
                             (new BukkitRunnable() {

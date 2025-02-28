@@ -1,7 +1,7 @@
 package me.stella.plugin.commands.subcommands;
 
 import me.stella.HyperVariables;
-import me.stella.functions.FunctionEnchant;
+import me.stella.utility.functions.FunctionEnchant;
 import me.stella.plugin.HyperSettings;
 import me.stella.plugin.commands.FarmSubCommand;
 import me.stella.plugin.data.FarmerData;
