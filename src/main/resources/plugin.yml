@@ -10,6 +10,7 @@ softdepend:
   - SuperiorSkyblock2
   - WorldGuard
   - PlaceholderAPI
+  - floodgate
 authors:
   - StellarSeal_
 description: A brand new experience to farming - Made for LuckyVN

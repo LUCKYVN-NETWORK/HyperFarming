@@ -229,7 +229,7 @@ public class HyperGUIBuilder {
                                 .replace("{type}", config.getTypeName(data))));
                         break;
                     }
-                    if(FloodgateApi.getInstance().isFloodgatePlayer(player.getUniqueId())) {
+                    if(BukkitUtils.isFloodgatePlayer(player)) {
                         FloodgatePlayer floodgatePlayer = FloodgateApi.getInstance().getPlayer(player.getUniqueId());
                         CustomForm form = CustomForm.builder().title("")
                                 .input(config.getInputTitle("fail").replace("{type}", config.getTypeName(data)), "123")
@@ -370,7 +370,7 @@ public class HyperGUIBuilder {
                                 .replace("{type}", config.getTypeName(data))));
                         break;
                     }
-                    if(FloodgateApi.getInstance().isFloodgatePlayer(player.getUniqueId())) {
+                    if(BukkitUtils.isFloodgatePlayer(player)) {
                         FloodgatePlayer floodgatePlayer = FloodgateApi.getInstance().getPlayer(player.getUniqueId());
                         CustomForm form = CustomForm.builder().title("")
                                 .input(config.getInputTitle("sell").replace("{type}", config.getTypeName(data)), "123")

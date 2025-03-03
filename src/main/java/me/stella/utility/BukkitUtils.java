@@ -20,6 +20,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.permissions.PermissionAttachmentInfo;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.geysermc.floodgate.api.FloodgateApi;
 
 import java.lang.reflect.Method;
 import java.text.NumberFormat;
@@ -84,6 +85,12 @@ public class BukkitUtils {
         if(!stack.hasItemMeta())
             return false;
         return stack.getItemMeta().isUnbreakable();
+    }
+
+    public static boolean isFloodgatePlayer(Player player) {
+        if(!isPluginEnabled("floodgate"))
+            return false;
+        return FloodgateApi.getInstance().isFloodgatePlayer(player.getUniqueId());
     }
 
     public static ItemStack buildItemStack(ConfigurationSection section) {
